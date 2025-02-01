@@ -70,7 +70,11 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
           defval: '',
         });
         
+        console.log("Données Excel brutes:", jsonData);
+        
         const cleanedData = cleanExcelData(jsonData);
+        console.log("Données nettoyées:", cleanedData);
+        
         setRawExcelData(cleanedData);
         localStorage.setItem('rawExcelData', JSON.stringify(cleanedData));
 
@@ -85,6 +89,12 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
               : parseFloat(row.Montant?.toString().replace(/[^\d.-]/g, '')) || 0
           }));
         
+        console.log("Données formatées pour les prédictions:", formattedData);
+        
+        if (formattedData.length === 0) {
+          throw new Error("Aucune donnée valide n'a été trouvée dans le fichier");
+        }
+        
         setBudgetData(formattedData);
         localStorage.setItem('budgetData', JSON.stringify(formattedData));
         
@@ -98,12 +108,12 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         });
 
         // Générer automatiquement les prédictions après l'import
-        handleGeneratePredictions(formattedData);
+        await handleGeneratePredictions(formattedData);
       } catch (error) {
         console.error("Erreur lors de l'import:", error);
         toast({
           title: "Erreur d'import",
-          description: "Le format du fichier n'est pas correct",
+          description: error instanceof Error ? error.message : "Le format du fichier n'est pas correct",
           variant: "destructive",
         });
       }
@@ -113,8 +123,16 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
 
   const handleGeneratePredictions = async (data: BudgetData[]) => {
     try {
+      console.log("Début de la génération des prédictions avec les données:", data);
       setIsGeneratingPredictions(true);
+      
+      if (!data || data.length === 0) {
+        throw new Error("Aucune donnée disponible pour générer les prédictions");
+      }
+      
       const newPredictions = await generatePredictions(data);
+      console.log("Prédictions générées:", newPredictions);
+      
       setPredictionsLocal(newPredictions);
       setPredictions(newPredictions);
       localStorage.setItem('predictions', JSON.stringify(newPredictions));
@@ -122,7 +140,7 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
       console.error("Erreur lors de la génération des prédictions:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de générer les prédictions",
+        description: error instanceof Error ? error.message : "Impossible de générer les prédictions",
         variant: "destructive",
       });
     } finally {
