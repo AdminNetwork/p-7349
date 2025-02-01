@@ -87,9 +87,19 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
               ? row.Montant 
               : parseFloat(row.Montant?.toString().replace(/[^\d.-]/g, '')) || 0
           }))
-          .filter(row => row.montant !== 0); // On filtre uniquement les lignes avec un montant nul
+          .filter(row => 
+            row.fournisseur && 
+            row.axe && 
+            row.annee && 
+            !isNaN(row.montant) && 
+            row.montant !== 0
+          );
         
         console.log("Données formatées pour les prédictions:", formattedData);
+        
+        if (formattedData.length === 0) {
+          throw new Error("Aucune donnée valide n'a été trouvée dans le fichier. Assurez-vous que les colonnes Fournisseur, Axe, Annee et Montant sont présentes et contiennent des valeurs valides.");
+        }
         
         setBudgetData(formattedData);
         localStorage.setItem('budgetData', JSON.stringify(formattedData));
