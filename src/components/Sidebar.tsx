@@ -1,10 +1,11 @@
-import { Home, LineChart } from "lucide-react";
+import { Home, LineChart, BarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
   { icon: Home, label: "Import", path: "/" },
-  { icon: LineChart, label: "Prédictions", path: "/predictions" },
+  { icon: LineChart, label: "Prédictions Total", path: "/predictions" },
+  { icon: BarChart, label: "Prédictions Détails", path: "/predictions-details" },
 ];
 
 const Sidebar = () => {

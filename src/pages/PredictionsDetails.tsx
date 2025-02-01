@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import { PredictionChart } from "@/components/PredictionChart";
 import type { PredictionData } from "@/utils/predictions";
 
-export default function Predictions() {
+export default function PredictionsDetails() {
   const [isLoading, setIsLoading] = useState(false);
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +33,11 @@ export default function Predictions() {
         setPredictions(parsedPredictions);
         
       } catch (error) {
-        console.error("Erreur lors du chargement des prédictions:", error);
+        console.error("Erreur lors du chargement des prédictions détaillées:", error);
         setError(error instanceof Error ? error.message : "Une erreur est survenue");
         toast({
           title: "Erreur",
-          description: "Impossible de charger les prédictions",
+          description: "Impossible de charger les prédictions détaillées",
           variant: "destructive",
         });
       } finally {
@@ -54,15 +54,14 @@ export default function Predictions() {
         throw new Error("Aucune prédiction à exporter");
       }
 
-      const totalPredictions = predictions.filter(p => p.isTotal);
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(totalPredictions);
-      XLSX.utils.book_append_sheet(wb, ws, "Prédictions Totales");
-      XLSX.writeFile(wb, "predictions_totales.xlsx");
+      const ws = XLSX.utils.json_to_sheet(predictions);
+      XLSX.utils.book_append_sheet(wb, ws, "Prédictions Détaillées");
+      XLSX.writeFile(wb, "predictions_detaillees.xlsx");
 
       toast({
         title: "Export réussi",
-        description: "Les prédictions totales ont été exportées avec succès",
+        description: "Les prédictions détaillées ont été exportées avec succès",
       });
     } catch (error) {
       toast({
@@ -74,7 +73,7 @@ export default function Predictions() {
   };
 
   const uniqueAxes = predictions
-    .filter(p => p.isTotal)
+    .filter(p => !p.isTotal)
     .reduce((acc, curr) => {
       if (!acc.includes(curr.axe)) {
         acc.push(curr.axe);
@@ -85,11 +84,11 @@ export default function Predictions() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Prédictions Totales</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Prédictions Détaillées</h2>
         {predictions.length > 0 && (
           <Button onClick={handleExport} className="ml-auto">
             <Download className="h-4 w-4 mr-2" />
-            Exporter les prédictions totales
+            Exporter les prédictions détaillées
           </Button>
         )}
       </div>
@@ -98,7 +97,7 @@ export default function Predictions() {
         <Card>
           <CardContent className="flex items-center justify-center py-6">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Chargement des prédictions totales...</span>
+            <span className="ml-2">Chargement des prédictions détaillées...</span>
           </CardContent>
         </Card>
       ) : error ? (
@@ -111,17 +110,17 @@ export default function Predictions() {
         <div className="grid gap-4 md:grid-cols-2">
           {uniqueAxes.map(axe => (
             <PredictionChart
-              key={`total-${axe}`}
+              key={`details-${axe}`}
               predictions={predictions}
               axe={axe}
-              showDetails={false}
+              showDetails={true}
             />
           ))}
         </div>
       ) : (
         <Card>
           <CardContent className="flex items-center justify-center py-6">
-            <span>Aucune prédiction totale disponible. Veuillez d'abord générer des prédictions.</span>
+            <span>Aucune prédiction détaillée disponible. Veuillez d'abord générer des prédictions.</span>
           </CardContent>
         </Card>
       )}

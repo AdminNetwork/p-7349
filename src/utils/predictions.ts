@@ -9,36 +9,36 @@ export async function generatePredictions(
 ): Promise<DetailedPredictionData[]> {
   console.log("Début de la génération des prédictions avec les données:", historicalData);
 
-  const yearColumns = Object.keys(historicalData[0] || {}).filter(key => 
-    key.startsWith('ANNEE_') && !isNaN(parseInt(key.split('_')[1]))
-  );
-
-  console.log("Colonnes d'années trouvées:", yearColumns);
-
-  // Séparer les totaux et les détails
-  const totalLines = historicalData.filter(entry => entry.Axe_IT?.startsWith('Total '));
-  const detailLines = historicalData.filter(entry => !entry.Axe_IT?.startsWith('Total '));
-
-  console.log("Nombre de lignes totales:", totalLines.length);
-  console.log("Nombre de lignes détaillées:", detailLines.length);
-
   const allPredictions: DetailedPredictionData[] = [];
 
   // Traiter les totaux
+  const totalLines = historicalData.filter(entry => entry.Axe_IT?.startsWith('Total '));
+  console.log("Lignes totales trouvées:", totalLines);
+
   for (const entry of totalLines) {
     const axeName = entry.Axe_IT.replace('Total ', '');
-    const dataPoints = yearColumns.map(col => ({
-      year: parseInt(col.split('_')[1]),
-      value: typeof entry[col] === 'string' 
-        ? parseFloat(entry[col].replace(/[^\d.-]/g, ''))
-        : entry[col]
-    })).filter(point => !isNaN(point.value));
+    
+    // Extraire les données historiques
+    const dataPoints = Object.entries(entry)
+      .filter(([key, value]) => 
+        (key.startsWith('REEL_') || 
+         key.startsWith('BUDGET_') || 
+         key.startsWith('ECART_') || 
+         key.startsWith('ATTERRISSAGE_')) && 
+        !isNaN(parseFloat(String(value)))
+      )
+      .map(([key, value]) => ({
+        year: parseInt(key.split('_')[1]),
+        value: typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : value
+      }))
+      .sort((a, b) => a.year - b.year);
+
+    console.log(`Données historiques pour ${axeName}:`, dataPoints);
 
     if (dataPoints.length < 2) continue;
 
     try {
       const predictions = await generatePredictionsForDataset(dataPoints, yearsToPredict);
-      
       predictions.forEach(pred => {
         allPredictions.push({
           ...pred,
@@ -52,19 +52,28 @@ export async function generatePredictions(
   }
 
   // Traiter les détails
+  const detailLines = historicalData.filter(entry => !entry.Axe_IT?.startsWith('Total '));
+  console.log("Lignes détaillées trouvées:", detailLines);
+
   for (const entry of detailLines) {
-    const dataPoints = yearColumns.map(col => ({
-      year: parseInt(col.split('_')[1]),
-      value: typeof entry[col] === 'string' 
-        ? parseFloat(entry[col].replace(/[^\d.-]/g, ''))
-        : entry[col]
-    })).filter(point => !isNaN(point.value));
+    const dataPoints = Object.entries(entry)
+      .filter(([key, value]) => 
+        (key.startsWith('REEL_') || 
+         key.startsWith('BUDGET_') || 
+         key.startsWith('ECART_') || 
+         key.startsWith('ATTERRISSAGE_')) && 
+        !isNaN(parseFloat(String(value)))
+      )
+      .map(([key, value]) => ({
+        year: parseInt(key.split('_')[1]),
+        value: typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : value
+      }))
+      .sort((a, b) => a.year - b.year);
 
     if (dataPoints.length < 2) continue;
 
     try {
       const predictions = await generatePredictionsForDataset(dataPoints, yearsToPredict);
-      
       predictions.forEach(pred => {
         allPredictions.push({
           ...pred,
