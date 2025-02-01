@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ImportForm } from "@/components/ImportForm";
 import { RawDataTable } from "@/components/RawDataTable";
-import { PredictionChart } from "@/components/PredictionChart";
 import type { BudgetData } from "@/types/budget";
 import type { PredictionData } from "@/utils/predictions";
 
@@ -23,14 +22,6 @@ export default function Index() {
     }
   }, []);
 
-  const uniqueCombinations = budgetData.reduce((acc, curr) => {
-    const key = `${curr.fournisseur}-${curr.axe}`;
-    if (!acc.includes(key)) {
-      acc.push(key);
-    }
-    return acc;
-  }, [] as string[]);
-
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -45,22 +36,6 @@ export default function Index() {
           budgetData={budgetData}
         />
       </div>
-
-      {predictions.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {uniqueCombinations.map(combo => {
-            const [fournisseur, axe] = combo.split('-');
-            return (
-              <PredictionChart
-                key={combo}
-                predictions={predictions}
-                fournisseur={fournisseur}
-                axe={axe}
-              />
-            );
-          })}
-        </div>
-      )}
 
       <RawDataTable rawExcelData={rawExcelData} />
     </div>
