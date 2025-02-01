@@ -68,6 +68,8 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         
         const cleanedData = cleanExcelData(jsonData);
         console.log("Données brutes après nettoyage:", cleanedData);
+        
+        // Sauvegarder les données brutes
         setRawExcelData(cleanedData);
         localStorage.setItem('rawExcelData', JSON.stringify(cleanedData));
 
@@ -83,8 +85,14 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
           }));
 
         console.log("Données formatées:", formattedData);
+        
+        // Sauvegarder les données formatées
         setBudgetData(formattedData);
         localStorage.setItem('budgetData', JSON.stringify(formattedData));
+        
+        // Réinitialiser les prédictions
+        setPredictions([]);
+        localStorage.removeItem('predictions');
         
         toast({
           title: "Import réussi",
