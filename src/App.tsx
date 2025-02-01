@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
 import Index from "./pages/Index";
-import Analytics from "./pages/Analytics";
+import Predictions from "./pages/Predictions";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +19,7 @@ const App = () => (
             <div className="max-w-7xl mx-auto">
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/predictions" element={<Predictions />} />
               </Routes>
             </div>
           </main>
