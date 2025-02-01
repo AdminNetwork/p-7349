@@ -1,41 +1,51 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import { PredictionChart } from "@/components/PredictionChart";
 import { Progress } from "@/components/ui/progress";
-import type { PredictionData } from "@/utils/predictions";
+import { Input } from "@/components/ui/input";
+import type { PredictionData } from '@/utils/predictions';
 
 export default function Predictions() {
   const [isLoading, setIsLoading] = useState(false);
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const isGenerating = localStorage.getItem('isGeneratingPredictions') === 'true';
+        const savedProgress = localStorage.getItem('predictionProgress');
+        
         if (isGenerating) {
           setIsLoading(true);
-          setProgress(0);
+          setProgress(savedProgress ? parseInt(savedProgress) : 0);
+          
           const interval = setInterval(() => {
             setProgress(prev => {
-              if (prev >= 90) return prev;
-              return prev + 10;
+              const newProgress = prev + 1;
+              if (newProgress >= 90) {
+                clearInterval(interval);
+                return prev;
+              }
+              localStorage.setItem('predictionProgress', newProgress.toString());
+              return newProgress;
             });
           }, 500);
 
-          // Vérifier périodiquement si la génération est terminée
           const checkInterval = setInterval(() => {
             const stillGenerating = localStorage.getItem('isGeneratingPredictions') === 'true';
             if (!stillGenerating) {
               clearInterval(interval);
               clearInterval(checkInterval);
               setProgress(100);
+              localStorage.setItem('predictionProgress', '100');
               setTimeout(() => {
                 setIsLoading(false);
                 loadPredictions();
@@ -119,6 +129,10 @@ export default function Predictions() {
       return acc;
     }, [] as string[]);
 
+  const filteredAxes = uniqueAxes.filter(axe => 
+    axe.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -130,6 +144,18 @@ export default function Predictions() {
           </Button>
         )}
       </div>
+
+      {predictions.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un axe..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      )}
 
       {isLoading ? (
         <Card>
@@ -149,7 +175,7 @@ export default function Predictions() {
         </Card>
       ) : predictions.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {uniqueAxes.map(axe => (
+          {filteredAxes.map(axe => (
             <PredictionChart
               key={`total-${axe}`}
               predictions={predictions}

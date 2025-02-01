@@ -21,27 +21,31 @@ export async function generatePredictions(
     const dataPoints = [];
     
     // Parcourir toutes les années possibles
-    for (let year = 2020; year <= currentYear; year++) {
+    for (let year = 2020; year <= currentYear + 1; year++) {
       const realKey = `ANNEE_${year}`;
       const budgetKey = `BUDGET_${year}`;
-      const ecartKey = `ECART_BUDGET_YTD_ET_REEL`;
       const atterissageKey = `ATTERISSAGE_${year}`;
       
-      let value = null;
+      let actualValue = null;
+      let predictedValue = null;
       
-      // Priorité : Réel > Atterrissage > Budget
+      // Pour les valeurs réelles
       if (entry[realKey] !== undefined && entry[realKey] !== null && entry[realKey] !== '') {
-        value = typeof entry[realKey] === 'string' ? parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : entry[realKey];
-      } else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
-        value = typeof entry[atterissageKey] === 'string' ? parseFloat(entry[atterissageKey].replace(/[^\d.-]/g, '')) : entry[atterissageKey];
-      } else if (entry[budgetKey] !== undefined && entry[budgetKey] !== null && entry[budgetKey] !== '') {
-        value = typeof entry[budgetKey] === 'string' ? parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : entry[budgetKey];
+        actualValue = typeof entry[realKey] === 'string' ? parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : entry[realKey];
       }
       
-      if (value !== null && !isNaN(value)) {
+      // Pour les prévisions (budget ou atterrissage)
+      if (entry[budgetKey] !== undefined && entry[budgetKey] !== null && entry[budgetKey] !== '') {
+        predictedValue = typeof entry[budgetKey] === 'string' ? parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : entry[budgetKey];
+      } else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
+        predictedValue = typeof entry[atterissageKey] === 'string' ? parseFloat(entry[atterissageKey].replace(/[^\d.-]/g, '')) : entry[atterissageKey];
+      }
+      
+      if (actualValue !== null || predictedValue !== null) {
         dataPoints.push({
           year,
-          value
+          actualValue,
+          predictedValue: predictedValue || actualValue
         });
       }
     }
@@ -70,10 +74,10 @@ export async function generatePredictions(
 }
 
 async function generatePredictionsForDataset(
-  dataPoints: { year: number; value: number }[],
+  dataPoints: { year: number; actualValue: number | null; predictedValue: number }[],
   yearsToPredict: number
 ): Promise<DetailedPredictionData[]> {
-  const values = dataPoints.map(d => d.value);
+  const values = dataPoints.map(d => d.predictedValue);
   const years = dataPoints.map(d => d.year);
 
   // Normaliser les données
@@ -98,12 +102,12 @@ async function generatePredictionsForDataset(
 
   const predictions: DetailedPredictionData[] = [];
 
-  // Ajouter les données historiques
+  // Ajouter les données historiques avec leurs valeurs réelles et prédites
   dataPoints.forEach(d => {
     predictions.push({
       year: d.year,
-      actualValue: d.value,
-      predictedValue: d.value,
+      actualValue: d.actualValue || undefined,
+      predictedValue: d.predictedValue,
       axe: '', // sera rempli par la fonction appelante
       isTotal: false // sera rempli par la fonction appelante
     });
