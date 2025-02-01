@@ -1,14 +1,10 @@
-import { Home, PieChart, Settings, User, CreditCard, Bell } from "lucide-react";
+import { Home, PieChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/" },
+  { icon: Home, label: "Import", path: "/" },
   { icon: PieChart, label: "Analytics", path: "/analytics" },
-  { icon: CreditCard, label: "Transactions", path: "/transactions" },
-  { icon: Bell, label: "Notifications", path: "/notifications" },
-  { icon: User, label: "Profile", path: "/profile" },
-  { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
 const Sidebar = () => {
@@ -18,7 +14,7 @@ const Sidebar = () => {
     <div className="fixed left-0 top-0 h-full w-64 glass-card border-r border-white/10">
       <div className="flex flex-col h-full">
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-primary">Finance</h2>
+          <h2 className="text-2xl font-bold text-primary">Budget IT</h2>
         </div>
         
         <nav className="flex-1 px-4">
@@ -45,16 +41,6 @@ const Sidebar = () => {
             })}
           </ul>
         </nav>
-
-        <div className="p-4 mt-auto">
-          <div className="flex items-center gap-3 px-4 py-3">
-            <User className="h-8 w-8 rounded-full bg-accent p-1" />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">John Doe</span>
-              <span className="text-xs text-secondary">Premium User</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

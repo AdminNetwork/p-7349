@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import * as XLSX from 'xlsx'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { useToast } from "@/components/ui/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Download } from "lucide-react"
 
 interface BudgetData {
   fournisseur: string
@@ -22,17 +24,14 @@ export default function Index() {
   const cleanExcelData = (data: any[]): any[] => {
     return data
       .filter(row => {
-        // Vérifier si la ligne contient des données valides
         const hasValidData = Object.values(row).some(value => 
           value !== null && value !== undefined && value !== ''
         )
         return hasValidData
       })
       .map(row => {
-        // Nettoyer chaque cellule
         const cleanedRow: any = {}
         Object.entries(row).forEach(([key, value]) => {
-          // Supprimer les espaces inutiles
           if (typeof value === 'string') {
             cleanedRow[key.trim()] = value.trim()
           } else if (typeof value === 'number') {
@@ -59,7 +58,6 @@ export default function Index() {
         const data = e.target?.result
         const workbook = XLSX.read(data, { type: 'binary' })
         
-        // Récupérer la première feuille du classeur
         const firstSheetName = workbook.SheetNames[0]
         console.log("Nom de la première feuille:", firstSheetName)
         
@@ -69,20 +67,17 @@ export default function Index() {
           throw new Error("Impossible de lire la première feuille du fichier Excel")
         }
 
-        // Convertir le tableau croisé en JSON avec des options de parsing plus strictes
         const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-          raw: false, // Convertir en chaînes de caractères
-          defval: '', // Valeur par défaut pour les cellules vides
+          raw: false,
+          defval: '',
         })
         
-        // Nettoyer les données
         const cleanedData = cleanExcelData(jsonData)
         console.log("Données brutes après nettoyage:", cleanedData)
         setRawExcelData(cleanedData)
 
-        // Transformation des données pour le graphique
         const formattedData: BudgetData[] = cleanedData
-          .filter(row => row.Fournisseur && row.Axe && row.Montant) // S'assurer que les champs requis sont présents
+          .filter(row => row.Fournisseur && row.Axe && row.Montant)
           .map((row: any) => ({
             fournisseur: row.Fournisseur?.toString().trim() || '',
             axe: row.Axe?.toString().trim() || '',
@@ -111,7 +106,27 @@ export default function Index() {
     reader.readAsBinaryString(file)
   }
 
-  // Agrégation des données par axe pour le graphique
+  const handleExportRawData = () => {
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(rawExcelData)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Données Brutes")
+      XLSX.writeFile(workbook, "donnees_brutes.xlsx")
+      
+      toast({
+        title: "Export réussi",
+        description: "Les données brutes ont été exportées avec succès",
+      })
+    } catch (error) {
+      console.error("Erreur lors de l'export:", error)
+      toast({
+        title: "Erreur d'export",
+        description: "Une erreur est survenue lors de l'export des données",
+        variant: "destructive",
+      })
+    }
+  }
+
   const chartData = budgetData.reduce((acc: any[], curr) => {
     const existingData = acc.find(item => item.axe === curr.axe)
     if (existingData) {
@@ -187,13 +202,16 @@ export default function Index() {
             </div>
           </CardContent>
         </Card>
-
       </div>
 
       {rawExcelData.length > 0 && (
         <Card className="col-span-7 mt-4">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Aperçu des données brutes</CardTitle>
+            <Button onClick={handleExportRawData} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Exporter les données brutes
+            </Button>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px] w-full rounded-md border">
