@@ -62,6 +62,27 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
 
   console.log("Bar data:", barData);
 
+  const CustomizedAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor="end"
+          fill="#666"
+          transform="rotate(-45)"
+          style={{
+            fontSize: '10px'
+          }}
+        >
+          <tspan x={0} dy="0">{payload.value}</tspan>
+        </text>
+      </g>
+    );
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -89,11 +110,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                   textAnchor="end"
                   height={100}
                   interval={0}
-                  tick={{
-                    fontSize: 10,
-                    width: 200,
-                    wordWrap: 'break-word'
-                  }}
+                  tick={<CustomizedAxisTick />}
                 />
                 <YAxis 
                   tickFormatter={formatEuro}
