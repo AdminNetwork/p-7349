@@ -16,19 +16,27 @@ export default function Predictions() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedData = localStorage.getItem('budgetData');
-    const storedRawData = localStorage.getItem('rawExcelData');
-    
-    if (storedData && storedRawData) {
-      const budgetData: BudgetData[] = JSON.parse(storedData);
-      setRawData(JSON.parse(storedRawData));
+    const loadData = async () => {
+      const storedData = localStorage.getItem('budgetData');
+      const storedRawData = localStorage.getItem('rawExcelData');
       
-      const generateAndSetPredictions = async () => {
+      console.log("Données stockées récupérées:", { storedData, storedRawData });
+      
+      if (storedData && storedRawData) {
+        const budgetData: BudgetData[] = JSON.parse(storedData);
+        setRawData(JSON.parse(storedRawData));
+        
         setIsLoading(true);
         try {
+          console.log("Génération des prédictions avec les données:", budgetData);
           const newPredictions = await generatePredictions(budgetData);
+          console.log("Nouvelles prédictions générées:", newPredictions);
           setPredictions(newPredictions);
-          console.log("Prédictions générées:", newPredictions);
+          
+          toast({
+            title: "Prédictions générées",
+            description: "Les prédictions ont été générées avec succès",
+          });
         } catch (error) {
           console.error("Erreur lors de la génération des prédictions:", error);
           toast({
@@ -39,14 +47,17 @@ export default function Predictions() {
         } finally {
           setIsLoading(false);
         }
-      };
+      } else {
+        console.log("Aucune donnée stockée trouvée");
+      }
+    };
 
-      generateAndSetPredictions();
-    }
+    loadData();
   }, [toast]);
 
   const exportPredictions = () => {
     try {
+      console.log("Début de l'export des prédictions");
       const wb = XLSX.utils.book_new();
       
       const formattedData = rawData.map(row => {
@@ -67,6 +78,8 @@ export default function Predictions() {
         };
       });
 
+      console.log("Données formatées pour l'export:", formattedData);
+      
       const ws = XLSX.utils.json_to_sheet(formattedData);
       XLSX.utils.book_append_sheet(wb, ws, "Prédictions");
       XLSX.writeFile(wb, "predictions_budgetaires.xlsx");
@@ -85,7 +98,6 @@ export default function Predictions() {
     }
   };
 
-  // Grouper les prédictions par fournisseur et axe pour l'affichage
   const uniqueCombinations = predictions.reduce((acc, curr) => {
     const key = `${curr.fournisseur}-${curr.axe}`;
     if (!acc.includes(key)) {
