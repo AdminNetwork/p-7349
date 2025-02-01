@@ -73,7 +73,6 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         const cleanedData = cleanExcelData(jsonData);
         console.log("Données brutes après nettoyage:", cleanedData);
         
-        // Sauvegarder les données brutes
         setRawExcelData(cleanedData);
         localStorage.setItem('rawExcelData', JSON.stringify(cleanedData));
 
@@ -90,17 +89,15 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
 
         console.log("Données formatées:", formattedData);
         
-        // Sauvegarder les données formatées
         setBudgetData(formattedData);
         localStorage.setItem('budgetData', JSON.stringify(formattedData));
         
-        // Réinitialiser les prédictions
         setPredictions([]);
         localStorage.removeItem('predictions');
         
         toast({
-          title: "Import réussi",
-          description: `${formattedData.length} lignes valides importées depuis la feuille "${firstSheetName}"`,
+          title: "Importé avec succès",
+          description: `${formattedData.length} lignes ont été importées`,
         });
       } catch (error) {
         console.error("Erreur lors de l'import:", error);
@@ -120,7 +117,7 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
   };
 
   return (
-    <Card className="col-span-4">
+    <Card className="col-span-7">
       <CardHeader>
         <CardTitle>Import des Données</CardTitle>
       </CardHeader>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { ImportForm } from "@/components/ImportForm";
-import { Statistics } from "@/components/Statistics";
 import { RawDataTable } from "@/components/RawDataTable";
 import { PredictionChart } from "@/components/PredictionChart";
 import type { BudgetData } from "@/types/budget";
@@ -12,7 +11,6 @@ export default function Index() {
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
 
   useEffect(() => {
-    // Load data from localStorage on component mount
     const storedBudgetData = localStorage.getItem('budgetData');
     const storedRawData = localStorage.getItem('rawExcelData');
     
@@ -39,14 +37,13 @@ export default function Index() {
         <h2 className="text-3xl font-bold tracking-tight">Prédiction Budgétaire IT</h2>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4">
         <ImportForm 
           setBudgetData={setBudgetData}
           setRawExcelData={setRawExcelData}
           setPredictions={setPredictions}
           budgetData={budgetData}
         />
-        <Statistics budgetData={budgetData} />
       </div>
 
       {predictions.length > 0 && (
