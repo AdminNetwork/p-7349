@@ -19,6 +19,34 @@ export default function Index() {
   const [rawExcelData, setRawExcelData] = useState<any[]>([])
   const { toast } = useToast()
 
+  const cleanExcelData = (data: any[]): any[] => {
+    return data
+      .filter(row => {
+        // Vérifier si la ligne contient des données valides
+        const hasValidData = Object.values(row).some(value => 
+          value !== null && value !== undefined && value !== ''
+        )
+        return hasValidData
+      })
+      .map(row => {
+        // Nettoyer chaque cellule
+        const cleanedRow: any = {}
+        Object.entries(row).forEach(([key, value]) => {
+          // Supprimer les espaces inutiles
+          if (typeof value === 'string') {
+            cleanedRow[key.trim()] = value.trim()
+          } else if (typeof value === 'number') {
+            cleanedRow[key.trim()] = value
+          } else if (value === null || value === undefined) {
+            cleanedRow[key.trim()] = ''
+          } else {
+            cleanedRow[key.trim()] = value.toString().trim()
+          }
+        })
+        return cleanedRow
+      })
+  }
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -41,23 +69,35 @@ export default function Index() {
           throw new Error("Impossible de lire la première feuille du fichier Excel")
         }
 
-        // Convertir le tableau croisé en JSON
-        const jsonData = XLSX.utils.sheet_to_json(worksheet)
-        console.log("Données brutes importées:", jsonData)
-        setRawExcelData(jsonData)
+        // Convertir le tableau croisé en JSON avec des options de parsing plus strictes
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          raw: false, // Convertir en chaînes de caractères
+          defval: '', // Valeur par défaut pour les cellules vides
+        })
+        
+        // Nettoyer les données
+        const cleanedData = cleanExcelData(jsonData)
+        console.log("Données brutes après nettoyage:", cleanedData)
+        setRawExcelData(cleanedData)
 
         // Transformation des données pour le graphique
-        const formattedData: BudgetData[] = jsonData.map((row: any) => ({
-          fournisseur: row.Fournisseur || '',
-          axe: row.Axe || '',
-          annee: row.Annee?.toString() || '',
-          montant: parseFloat(row.Montant) || 0
-        }))
+        const formattedData: BudgetData[] = cleanedData
+          .filter(row => row.Fournisseur && row.Axe && row.Montant) // S'assurer que les champs requis sont présents
+          .map((row: any) => ({
+            fournisseur: row.Fournisseur?.toString().trim() || '',
+            axe: row.Axe?.toString().trim() || '',
+            annee: row.Annee?.toString().trim() || '',
+            montant: typeof row.Montant === 'number' 
+              ? row.Montant 
+              : parseFloat(row.Montant?.toString().replace(/[^\d.-]/g, '')) || 0
+          }))
 
+        console.log("Données formatées:", formattedData)
         setBudgetData(formattedData)
+        
         toast({
           title: "Import réussi",
-          description: `${formattedData.length} lignes importées depuis la feuille "${firstSheetName}"`,
+          description: `${formattedData.length} lignes valides importées depuis la feuille "${firstSheetName}"`,
         })
       } catch (error) {
         console.error("Erreur lors de l'import:", error)
@@ -147,6 +187,7 @@ export default function Index() {
             </div>
           </CardContent>
         </Card>
+
       </div>
 
       {rawExcelData.length > 0 && (
