@@ -10,28 +10,41 @@ export async function generatePredictions(
   console.log("Début de la génération des prédictions avec les données:", historicalData);
 
   const allPredictions: DetailedPredictionData[] = [];
+  const currentYear = new Date().getFullYear();
 
-  // Traiter les totaux
-  const totalLines = historicalData.filter(entry => entry.Axe_IT?.startsWith('Total '));
-  console.log("Lignes totales trouvées:", totalLines);
-
-  for (const entry of totalLines) {
-    const axeName = entry.Axe_IT.replace('Total ', '');
+  // Traiter les totaux et les détails
+  for (const entry of historicalData) {
+    const isTotal = entry.Axe_IT?.startsWith('Total ');
+    const axeName = isTotal ? entry.Axe_IT.replace('Total ', '') : entry.Axe_IT;
     
     // Extraire les données historiques
-    const dataPoints = Object.entries(entry)
-      .filter(([key, value]) => 
-        (key.startsWith('REEL_') || 
-         key.startsWith('BUDGET_') || 
-         key.startsWith('ECART_') || 
-         key.startsWith('ATTERRISSAGE_')) && 
-        !isNaN(parseFloat(String(value)))
-      )
-      .map(([key, value]) => ({
-        year: parseInt(key.split('_')[1]),
-        value: typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : value
-      }))
-      .sort((a, b) => a.year - b.year);
+    const dataPoints = [];
+    
+    // Parcourir toutes les années possibles
+    for (let year = 2020; year <= currentYear; year++) {
+      const realKey = `ANNEE_${year}`;
+      const budgetKey = `BUDGET_${year}`;
+      const ecartKey = `ECART_BUDGET_YTD_ET_REEL`;
+      const atterissageKey = `ATTERISSAGE_${year}`;
+      
+      let value = null;
+      
+      // Priorité : Réel > Atterrissage > Budget
+      if (entry[realKey] !== undefined && entry[realKey] !== null && entry[realKey] !== '') {
+        value = typeof entry[realKey] === 'string' ? parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : entry[realKey];
+      } else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
+        value = typeof entry[atterissageKey] === 'string' ? parseFloat(entry[atterissageKey].replace(/[^\d.-]/g, '')) : entry[atterissageKey];
+      } else if (entry[budgetKey] !== undefined && entry[budgetKey] !== null && entry[budgetKey] !== '') {
+        value = typeof entry[budgetKey] === 'string' ? parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : entry[budgetKey];
+      }
+      
+      if (value !== null && !isNaN(value)) {
+        dataPoints.push({
+          year,
+          value
+        });
+      }
+    }
 
     console.log(`Données historiques pour ${axeName}:`, dataPoints);
 
@@ -43,48 +56,13 @@ export async function generatePredictions(
         allPredictions.push({
           ...pred,
           axe: axeName,
-          isTotal: true
-        });
-      });
-    } catch (error) {
-      console.error(`Erreur lors de la génération des prédictions pour ${axeName}:`, error);
-    }
-  }
-
-  // Traiter les détails
-  const detailLines = historicalData.filter(entry => !entry.Axe_IT?.startsWith('Total '));
-  console.log("Lignes détaillées trouvées:", detailLines);
-
-  for (const entry of detailLines) {
-    const dataPoints = Object.entries(entry)
-      .filter(([key, value]) => 
-        (key.startsWith('REEL_') || 
-         key.startsWith('BUDGET_') || 
-         key.startsWith('ECART_') || 
-         key.startsWith('ATTERRISSAGE_')) && 
-        !isNaN(parseFloat(String(value)))
-      )
-      .map(([key, value]) => ({
-        year: parseInt(key.split('_')[1]),
-        value: typeof value === 'string' ? parseFloat(value.replace(/[^\d.-]/g, '')) : value
-      }))
-      .sort((a, b) => a.year - b.year);
-
-    if (dataPoints.length < 2) continue;
-
-    try {
-      const predictions = await generatePredictionsForDataset(dataPoints, yearsToPredict);
-      predictions.forEach(pred => {
-        allPredictions.push({
-          ...pred,
-          axe: entry.Axe_IT,
-          isTotal: false,
+          isTotal,
           contrepartie: entry.Contrepartie,
           libLong: entry.Lib_Long
         });
       });
     } catch (error) {
-      console.error(`Erreur lors de la génération des prédictions détaillées pour ${entry.Axe_IT}:`, error);
+      console.error(`Erreur lors de la génération des prédictions pour ${axeName}:`, error);
     }
   }
 

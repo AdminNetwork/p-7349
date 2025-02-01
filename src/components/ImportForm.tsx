@@ -49,12 +49,13 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         setPredictionsLocal([]);
         localStorage.removeItem('predictions');
         
+        setIsGeneratingPredictions(true);
+        await handleGeneratePredictions(jsonData as BudgetData[]);
+        
         toast({
           title: "Import réussi",
-          description: "",
+          description: "Les données ont été importées avec succès",
         });
-
-        await handleGeneratePredictions(jsonData as BudgetData[]);
       } catch (error) {
         console.error("Erreur lors de l'import:", error);
         toast({
@@ -70,7 +71,6 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
   const handleGeneratePredictions = async (data: BudgetData[]) => {
     try {
       console.log("Début de la génération des prédictions avec les données:", data);
-      setIsGeneratingPredictions(true);
       
       if (!data || data.length === 0) {
         throw new Error("Aucune donnée disponible pour générer les prédictions");
@@ -82,6 +82,11 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
       setPredictionsLocal(newPredictions);
       setPredictions(newPredictions);
       localStorage.setItem('predictions', JSON.stringify(newPredictions));
+
+      toast({
+        title: "Prédictions générées",
+        description: "Les prédictions ont été générées avec succès",
+      });
     } catch (error) {
       console.error("Erreur lors de la génération des prédictions:", error);
       toast({
@@ -138,7 +143,7 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
           className="mb-4"
         />
         
-        {predictions.length > 0 && (
+        {predictions.length > 0 && !isGeneratingPredictions && (
           <>
             <div className="flex justify-end mb-4">
               <Button 
@@ -160,6 +165,12 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
               ))}
             </div>
           </>
+        )}
+
+        {isGeneratingPredictions && (
+          <div className="text-center py-4">
+            <p>Génération des prédictions en cours...</p>
+          </div>
         )}
       </CardContent>
     </Card>
