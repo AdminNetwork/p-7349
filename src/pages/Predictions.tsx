@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -7,12 +7,43 @@ import * as XLSX from 'xlsx';
 import { PredictionChart } from "@/components/PredictionChart";
 import { generatePredictions } from "@/utils/predictions";
 import type { PredictionData } from "@/utils/predictions";
+import type { BudgetData } from "@/types/budget";
 
 export default function Predictions() {
   const [isLoading, setIsLoading] = useState(false);
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
   const [rawData, setRawData] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedData = localStorage.getItem('budgetData');
+    const storedRawData = localStorage.getItem('rawExcelData');
+    
+    if (storedData && storedRawData) {
+      const budgetData: BudgetData[] = JSON.parse(storedData);
+      setRawData(JSON.parse(storedRawData));
+      
+      const generateAndSetPredictions = async () => {
+        setIsLoading(true);
+        try {
+          const newPredictions = await generatePredictions(budgetData);
+          setPredictions(newPredictions);
+          console.log("Prédictions générées:", newPredictions);
+        } catch (error) {
+          console.error("Erreur lors de la génération des prédictions:", error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de générer les prédictions",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      generateAndSetPredictions();
+    }
+  }, [toast]);
 
   const exportPredictions = () => {
     try {

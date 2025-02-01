@@ -69,6 +69,7 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         const cleanedData = cleanExcelData(jsonData);
         console.log("Données brutes après nettoyage:", cleanedData);
         setRawExcelData(cleanedData);
+        localStorage.setItem('rawExcelData', JSON.stringify(cleanedData));
 
         const formattedData: BudgetData[] = cleanedData
           .filter(row => row.Fournisseur && row.Axe && row.Montant)
@@ -83,6 +84,7 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
 
         console.log("Données formatées:", formattedData);
         setBudgetData(formattedData);
+        localStorage.setItem('budgetData', JSON.stringify(formattedData));
         
         toast({
           title: "Import réussi",
