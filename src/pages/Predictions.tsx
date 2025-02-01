@@ -18,28 +18,30 @@ export default function Predictions() {
 
   useEffect(() => {
     const loadData = async () => {
-      const storedData = localStorage.getItem('budgetData');
-      const storedRawData = localStorage.getItem('rawExcelData');
-      
-      console.log("Données stockées récupérées:", { storedData, storedRawData });
-      
-      if (!storedData || !storedRawData) {
-        console.log("Aucune donnée stockée trouvée");
-        setError("Veuillez d'abord importer des données dans l'onglet Import");
-        return;
-      }
-
       try {
+        const storedData = localStorage.getItem('budgetData');
+        const storedRawData = localStorage.getItem('rawExcelData');
+        
+        console.log("Tentative de chargement des données depuis localStorage:", { storedData, storedRawData });
+        
+        if (!storedData || !storedRawData) {
+          console.log("Aucune donnée trouvée dans localStorage");
+          setError("Veuillez d'abord importer des données dans l'onglet Import");
+          return;
+        }
+
         const budgetData: BudgetData[] = JSON.parse(storedData);
-        setRawData(JSON.parse(storedRawData));
+        const parsedRawData = JSON.parse(storedRawData);
         
         if (!budgetData || budgetData.length === 0) {
+          console.log("Données budgétaires invalides ou vides");
           setError("Les données importées sont vides ou invalides");
           return;
         }
         
         setIsLoading(true);
         setError(null);
+        setRawData(parsedRawData);
         
         console.log("Génération des prédictions avec les données:", budgetData);
         const newPredictions = await generatePredictions(budgetData);

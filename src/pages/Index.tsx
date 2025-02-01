@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImportForm } from "@/components/ImportForm";
 import { Statistics } from "@/components/Statistics";
 import { RawDataTable } from "@/components/RawDataTable";
@@ -10,6 +10,20 @@ export default function Index() {
   const [budgetData, setBudgetData] = useState<BudgetData[]>([]);
   const [rawExcelData, setRawExcelData] = useState<any[]>([]);
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
+
+  useEffect(() => {
+    // Load data from localStorage on component mount
+    const storedBudgetData = localStorage.getItem('budgetData');
+    const storedRawData = localStorage.getItem('rawExcelData');
+    
+    if (storedBudgetData) {
+      setBudgetData(JSON.parse(storedBudgetData));
+    }
+    
+    if (storedRawData) {
+      setRawExcelData(JSON.parse(storedRawData));
+    }
+  }, []);
 
   const uniqueCombinations = budgetData.reduce((acc, curr) => {
     const key = `${curr.fournisseur}-${curr.axe}`;
