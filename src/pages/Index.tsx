@@ -4,6 +4,8 @@ import { useState } from "react"
 import * as XLSX from 'xlsx'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { useToast } from "@/components/ui/use-toast"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface BudgetData {
   fournisseur: string
@@ -14,6 +16,7 @@ interface BudgetData {
 
 export default function Index() {
   const [budgetData, setBudgetData] = useState<BudgetData[]>([])
+  const [rawExcelData, setRawExcelData] = useState<any[]>([])
   const { toast } = useToast()
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,9 +38,10 @@ export default function Index() {
         }
 
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
-        console.log("Données importées:", jsonData)
+        console.log("Données brutes importées:", jsonData)
+        setRawExcelData(jsonData)
 
-        // Transformation des données
+        // Transformation des données pour le graphique
         const formattedData: BudgetData[] = jsonData.map((row: any) => ({
           fournisseur: row.Fournisseur || '',
           axe: row.Axe || '',
@@ -139,6 +143,40 @@ export default function Index() {
           </CardContent>
         </Card>
       </div>
+
+      {rawExcelData.length > 0 && (
+        <Card className="col-span-7 mt-4">
+          <CardHeader>
+            <CardTitle>Aperçu des données brutes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] w-full rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {Object.keys(rawExcelData[0]).map((header) => (
+                      <TableHead key={header}>{header}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rawExcelData.map((row, index) => (
+                    <TableRow key={index}>
+                      {Object.values(row).map((value: any, cellIndex) => (
+                        <TableCell key={cellIndex}>
+                          {typeof value === 'number' 
+                            ? new Intl.NumberFormat('fr-FR').format(value)
+                            : value?.toString() || ''}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
