@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import type { BudgetData } from "@/types/budget";
 
 interface ImportFormProps {
@@ -14,6 +17,7 @@ interface ImportFormProps {
 
 export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, budgetData }: ImportFormProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const cleanExcelData = (data: any[]): any[] => {
     return data
@@ -110,6 +114,11 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
     reader.readAsBinaryString(file);
   };
 
+  const handleNavigateToPredictions = () => {
+    console.log("Navigation vers la page des prédictions");
+    navigate('/predictions');
+  };
+
   return (
     <Card className="col-span-4">
       <CardHeader>
@@ -122,20 +131,33 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
           onChange={handleFileUpload}
           className="mb-4"
         />
+        
         {budgetData.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold mb-2">Répartition par Axe IT</h3>
-            <div className="w-full overflow-x-auto">
-              <BarChart width={600} height={300} data={budgetData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="axe" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="montant" fill="#8884d8" name="Montant" />
-              </BarChart>
+          <>
+            <div className="flex justify-end mb-4">
+              <Button 
+                onClick={handleNavigateToPredictions}
+                className="flex items-center gap-2"
+              >
+                Voir les prédictions
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
+            
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Répartition par Axe IT</h3>
+              <div className="w-full overflow-x-auto">
+                <BarChart width={600} height={300} data={budgetData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="axe" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="montant" fill="#8884d8" name="Montant" />
+                </BarChart>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
