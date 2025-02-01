@@ -33,7 +33,8 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
     })
     .sort((a, b) => {
       if (showDetails) {
-        return a.contrepartie?.localeCompare(b.contrepartie || '') || 0;
+        // Tri par montant prévu décroissant pour avoir les plus grandes valeurs à gauche
+        return (b.predictedValue || 0) - (a.predictedValue || 0);
       }
       return a.year - b.year;
     });
@@ -44,15 +45,14 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
     new Intl.NumberFormat('fr-FR', { 
       style: 'currency', 
       currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
 
   const barData = showDetails ? filteredData.map(d => ({
-    contrepartie: d.contrepartie || '',
-    libLong: d.libLong || '',
-    Réel: d.actualValue || 0,
-    Budget: d.predictedValue || 0,
+    contrepartie: `${d.contrepartie || ''} ${d.libLong || ''}`,
+    PREDICTIONS: d.predictedValue || 0,
+    REELS: d.actualValue || 0,
     year: d.year
   })) : [];
 
@@ -68,10 +68,12 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
           dy={16}
           textAnchor="end"
           fill="#666"
-          transform="rotate(-45)"
-          style={{ fontSize: '10px' }}
+          transform="rotate(-35)"
+          style={{ fontSize: '12px' }}
         >
-          <tspan x={0} dy="0">{payload.value}</tspan>
+          {payload.value.length > 30 
+            ? `${payload.value.substring(0, 30)}...` 
+            : payload.value}
         </text>
       </g>
     );
@@ -85,7 +87,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[400px]">
+        <div className="h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             {showDetails ? (
               <BarChart 
@@ -100,7 +102,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="contrepartie"
-                  angle={-45}
+                  angle={-35}
                   textAnchor="end"
                   height={100}
                   interval={0}
@@ -109,27 +111,31 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                 <YAxis 
                   tickFormatter={formatEuro}
                   width={100}
+                  label={{ 
+                    value: 'PREDICTIONS, REELS', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    offset: 20
+                  }}
                 />
                 <Tooltip 
                   formatter={(value: number) => formatEuro(value)}
-                  labelFormatter={(label, payload) => {
-                    if (payload && payload[0]) {
-                      const data = payload[0].payload;
-                      return `${data.contrepartie}\n${data.libLong}\nAnnée: ${data.year}`;
-                    }
-                    return '';
+                  labelFormatter={(label) => label}
+                />
+                <Legend 
+                  verticalAlign="top"
+                  height={36}
+                  wrapperStyle={{
+                    paddingTop: "20px"
                   }}
                 />
-                <Legend />
                 <Bar 
-                  dataKey="Réel" 
-                  fill="#8884d8" 
-                  name="Valeurs réelles"
+                  dataKey="PREDICTIONS" 
+                  fill="#006d77" 
                 />
                 <Bar 
-                  dataKey="Budget" 
-                  fill="#82ca9d" 
-                  name="Budget/Prévisions"
+                  dataKey="REELS" 
+                  fill="#9b2226" 
                 />
               </BarChart>
             ) : (
