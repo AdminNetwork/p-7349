@@ -21,6 +21,9 @@ interface PredictionChartProps {
 }
 
 export function PredictionChart({ predictions, axe, showDetails = false }: PredictionChartProps) {
+  console.log("Rendering PredictionChart for axe:", axe, "showDetails:", showDetails);
+  console.log("Predictions data:", predictions);
+
   const filteredData = predictions
     .filter(p => {
       if (showDetails) {
@@ -28,26 +31,36 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
       }
       return p.isTotal && p.axe === axe;
     })
-    .sort((a, b) => a.year - b.year);
+    .sort((a, b) => {
+      if (showDetails) {
+        // Sort by contrepartie for detailed view
+        const contrepartieA = `${a.contrepartie || ''} ${a.libLong || ''}`.trim();
+        const contrepartieB = `${b.contrepartie || ''} ${b.libLong || ''}`.trim();
+        return contrepartieA.localeCompare(contrepartieB);
+      }
+      return a.year - b.year;
+    });
 
-  const detailGroups = showDetails
-    ? [...new Set(filteredData.map(d => d.contrepartie || d.libLong))]
-    : [];
+  console.log("Filtered data:", filteredData);
 
   // Formatter pour les montants en euros
   const formatEuro = (value: number) => 
     new Intl.NumberFormat('fr-FR', { 
       style: 'currency', 
-      currency: 'EUR' 
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(value);
 
   // Pour le graphique en barres, nous devons restructurer les données
   const barData = showDetails ? filteredData.map(d => ({
-    group: `${d.contrepartie || ''} ${d.libLong || ''}`.trim(),
+    contrepartie: `${d.contrepartie || ''} ${d.libLong || ''}`.trim(),
     Réel: d.actualValue || 0,
     Budget: d.predictedValue || 0,
     year: d.year
   })) : [];
+
+  console.log("Bar data:", barData);
 
   return (
     <Card className="w-full">
@@ -60,22 +73,35 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             {showDetails ? (
-              <BarChart data={barData}>
+              <BarChart 
+                data={barData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 100,
+                  bottom: 100
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
-                  dataKey="group" 
+                  dataKey="contrepartie" 
                   angle={-45}
                   textAnchor="end"
                   height={100}
                   interval={0}
-                  tick={{fontSize: 10}}
+                  tick={{
+                    fontSize: 10,
+                    width: 200,
+                    wordWrap: 'break-word'
+                  }}
                 />
                 <YAxis 
                   tickFormatter={formatEuro}
+                  width={100}
                 />
                 <Tooltip 
                   formatter={(value: number) => formatEuro(value)}
-                  labelFormatter={(label) => `Groupe: ${label}`}
+                  labelFormatter={(label) => `Contrepartie: ${label}`}
                 />
                 <Legend />
                 <Bar 
@@ -90,14 +116,25 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                 />
               </BarChart>
             ) : (
-              <LineChart data={filteredData}>
+              <LineChart 
+                data={filteredData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 100,
+                  bottom: 5
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="year"
                   type="number"
                   domain={['auto', 'auto']}
                 />
-                <YAxis tickFormatter={formatEuro} />
+                <YAxis 
+                  tickFormatter={formatEuro}
+                  width={100}
+                />
                 <Tooltip 
                   formatter={(value: number) => formatEuro(value)}
                   labelFormatter={(label) => `Année: ${label}`}
