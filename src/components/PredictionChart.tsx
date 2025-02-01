@@ -33,7 +33,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
     })
     .sort((a, b) => {
       if (showDetails) {
-        // Sort by contrepartie for detailed view
+        // Tri par contrepartie pour la vue détaillée
         const contrepartieA = `${a.contrepartie || ''} ${a.libLong || ''}`.trim();
         const contrepartieB = `${b.contrepartie || ''} ${b.libLong || ''}`.trim();
         return contrepartieA.localeCompare(contrepartieB);
@@ -43,7 +43,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
 
   console.log("Filtered data:", filteredData);
 
-  // Formatter pour les montants en euros
+  // Formateur pour les montants en euros
   const formatEuro = (value: number) => 
     new Intl.NumberFormat('fr-FR', { 
       style: 'currency', 
@@ -52,7 +52,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
       maximumFractionDigits: 2
     }).format(value);
 
-  // Pour le graphique en barres, nous devons restructurer les données
+  // Pour le graphique en barres, restructurer les données
   const barData = showDetails ? filteredData.map(d => ({
     contrepartie: `${d.contrepartie || ''} ${d.libLong || ''}`.trim(),
     Réel: d.actualValue || 0,
