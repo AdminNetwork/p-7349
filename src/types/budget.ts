@@ -1,6 +1,7 @@
 export interface BudgetData {
-  fournisseur: string;
-  axe: string;
-  annee: string;
-  montant: number;
+  Fournisseur: string;
+  Axe: string;
+  Annee: string | number;
+  Montant: string | number;
+  [key: string]: any; // Pour permettre d'autres colonnes optionnelles
 }

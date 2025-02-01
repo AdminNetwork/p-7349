@@ -9,48 +9,53 @@ export interface PredictionData {
 }
 
 export async function generatePredictions(
-  historicalData: Array<{ fournisseur: string; axe: string; annee: string; montant: number }>,
+  historicalData: Array<any>,
   yearsToPredict: number = 10
 ): Promise<PredictionData[]> {
-  console.log("Début de la génération des prédictions", historicalData);
+  console.log("Début de la génération des prédictions avec les données brutes:", historicalData);
 
-  if (!historicalData || historicalData.length === 0) {
-    console.error("Données historiques manquantes ou vides");
-    throw new Error("Données historiques manquantes ou vides");
-  }
+  // Filtrer et transformer les données valides
+  const validData = historicalData
+    .filter(entry => {
+      const hasRequiredFields = 
+        entry.Fournisseur && 
+        entry.Axe && 
+        entry.Annee && 
+        entry.Montant !== undefined && 
+        entry.Montant !== null;
+      
+      if (!hasRequiredFields) {
+        console.log("Ligne ignorée car données manquantes:", entry);
+      }
+      return hasRequiredFields;
+    })
+    .map(entry => ({
+      fournisseur: String(entry.Fournisseur),
+      axe: String(entry.Axe),
+      year: typeof entry.Annee === 'string' ? parseInt(entry.Annee) : entry.Annee,
+      value: typeof entry.Montant === 'string' ? parseFloat(entry.Montant.replace(/[^\d.-]/g, '')) : entry.Montant
+    }))
+    .filter(entry => !isNaN(entry.year) && !isNaN(entry.value));
 
-  // Vérification des données d'entrée
-  const invalidData = historicalData.some(entry => 
-    !entry.fournisseur || 
-    !entry.axe || 
-    !entry.annee || 
-    typeof entry.montant !== 'number' ||
-    isNaN(entry.montant)
-  );
+  console.log("Données valides après filtrage:", validData);
 
-  if (invalidData) {
-    console.error("Format des données invalide");
-    throw new Error("Format des données invalide - Vérifiez que toutes les entrées sont complètes et valides");
+  if (validData.length === 0) {
+    throw new Error("Aucune donnée valide trouvée pour générer les prédictions");
   }
 
   // Grouper les données par fournisseur et axe
   const groupedData = new Map<string, Array<{ year: number; value: number }>>();
   
-  historicalData.forEach(entry => {
+  validData.forEach(entry => {
     const key = `${entry.fournisseur}-${entry.axe}`;
     if (!groupedData.has(key)) {
       groupedData.set(key, []);
     }
     groupedData.get(key)?.push({
-      year: parseInt(entry.annee),
-      value: entry.montant
+      year: entry.year,
+      value: entry.value
     });
   });
-
-  if (groupedData.size === 0) {
-    console.error("Aucun groupe de données valide trouvé");
-    throw new Error("Aucun groupe de données valide trouvé");
-  }
 
   const allPredictions: PredictionData[] = [];
 
@@ -59,19 +64,19 @@ export async function generatePredictions(
     const [fournisseur, axe] = key.split('-');
     
     if (data.length < 2) {
-      console.warn(`Données insuffisantes pour ${fournisseur}-${axe}. Au moins 2 points sont nécessaires.`);
+      console.log(`Données insuffisantes pour ${fournisseur}-${axe}. Au moins 2 points sont nécessaires.`);
       continue;
     }
 
     // Trier les données par année
     data.sort((a, b) => a.year - b.year);
     
-    // Préparer les données pour le modèle
-    const values = data.map(d => d.value);
-    const years = data.map(d => d.year);
-    
     try {
-      // Calculer la moyenne
+      // Préparer les données pour le modèle
+      const values = data.map(d => d.value);
+      const years = data.map(d => d.year);
+      
+      // Calculer la moyenne et l'écart-type
       const mean = tf.mean(values);
       const squaredDiffs = tf.sub(values, mean).square();
       const variance = tf.mean(squaredDiffs);
@@ -80,7 +85,7 @@ export async function generatePredictions(
       // Normaliser les données
       const normalizedValues = tf.sub(values, mean).div(standardDeviation);
 
-      // Créer et entraîner un modèle simple de régression
+      // Créer et entraîner le modèle
       const model = tf.sequential();
       model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
       
@@ -136,12 +141,10 @@ export async function generatePredictions(
       xs.dispose();
     } catch (error) {
       console.error(`Erreur lors de la génération des prédictions pour ${fournisseur}-${axe}:`, error);
-      throw new Error(`Erreur lors de la génération des prédictions pour ${fournisseur}-${axe}`);
     }
   }
 
   if (allPredictions.length === 0) {
-    console.error("Aucune prédiction n'a pu être générée");
     throw new Error("Aucune prédiction n'a pu être générée");
   }
 
