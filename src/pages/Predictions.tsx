@@ -84,8 +84,7 @@ export default function Predictions() {
       
       const formattedData = rawData.map(row => {
         const matchingPredictions = predictions.filter(
-          p => p.fournisseur === row.Fournisseur && 
-              p.axe === row.Axe &&
+          p => p.axe === row.Axe_IT && 
               p.year > parseInt(row.Annee)
         );
         
@@ -120,10 +119,9 @@ export default function Predictions() {
     }
   };
 
-  const uniqueCombinations = predictions.reduce((acc, curr) => {
-    const key = `${curr.fournisseur}-${curr.axe}`;
-    if (!acc.includes(key)) {
-      acc.push(key);
+  const uniqueAxes = predictions.reduce((acc, curr) => {
+    if (!acc.includes(curr.axe)) {
+      acc.push(curr.axe);
     }
     return acc;
   }, [] as string[]);
@@ -155,17 +153,13 @@ export default function Predictions() {
         </Card>
       ) : predictions.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {uniqueCombinations.map(combo => {
-            const [fournisseur, axe] = combo.split('-');
-            return (
-              <PredictionChart
-                key={combo}
-                predictions={predictions}
-                fournisseur={fournisseur}
-                axe={axe}
-              />
-            );
-          })}
+          {uniqueAxes.map(axe => (
+            <PredictionChart
+              key={axe}
+              predictions={predictions}
+              axe={axe}
+            />
+          ))}
         </div>
       ) : (
         <Card>
