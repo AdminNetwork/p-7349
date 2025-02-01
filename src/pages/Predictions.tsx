@@ -47,10 +47,8 @@ export default function Predictions() {
 
   const exportPredictions = () => {
     try {
-      // Créer un nouveau workbook
       const wb = XLSX.utils.book_new();
       
-      // Transformer les prédictions en format tabulaire
       const formattedData = rawData.map(row => {
         const matchingPredictions = predictions.filter(
           p => p.fournisseur === row.Fournisseur && 
@@ -69,13 +67,8 @@ export default function Predictions() {
         };
       });
 
-      // Créer une worksheet avec les données
       const ws = XLSX.utils.json_to_sheet(formattedData);
-      
-      // Ajouter la worksheet au workbook
       XLSX.utils.book_append_sheet(wb, ws, "Prédictions");
-      
-      // Sauvegarder le fichier
       XLSX.writeFile(wb, "predictions_budgetaires.xlsx");
 
       toast({
@@ -113,16 +106,14 @@ export default function Predictions() {
         )}
       </div>
 
-      {isLoading && (
+      {isLoading ? (
         <Card>
           <CardContent className="flex items-center justify-center py-6">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">Génération des prédictions en cours...</span>
           </CardContent>
         </Card>
-      )}
-
-      {predictions.length > 0 && (
+      ) : predictions.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {uniqueCombinations.map(combo => {
             const [fournisseur, axe] = combo.split('-');
@@ -136,6 +127,12 @@ export default function Predictions() {
             );
           })}
         </div>
+      ) : (
+        <Card>
+          <CardContent className="flex items-center justify-center py-6">
+            <span>Aucune prédiction disponible. Veuillez d'abord importer des données.</span>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
