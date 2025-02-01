@@ -11,7 +11,7 @@ export async function generatePredictions(
 
   const allPredictions: DetailedPredictionData[] = [];
   const currentYear = new Date().getFullYear();
-  const maxPredictionYear = currentYear + yearsToPredict;
+  const maxPredictionYear = 2030; // Forcer la prédiction jusqu'à 2030
 
   // Traiter les totaux et les détails
   for (const entry of historicalData) {
@@ -71,7 +71,7 @@ export async function generatePredictions(
       const trainingPoints = dataPoints.filter(point => !point.hasBudget);
       
       // Générer les prédictions pour toutes les années futures
-      const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, yearsToPredict);
+      const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, maxPredictionYear - currentYear);
       
       predictions.forEach(pred => {
         allPredictions.push({
@@ -95,7 +95,6 @@ async function generatePredictionsForDataset(
   allDataPoints: { year: number; actualValue: number | null; predictedValue: number; hasBudget: boolean }[],
   yearsToPredict: number
 ): Promise<DetailedPredictionData[]> {
-  const currentYear = new Date().getFullYear();
   const values = trainingPoints.map(d => d.predictedValue);
   const years = trainingPoints.map(d => d.year);
 
@@ -147,7 +146,7 @@ async function generatePredictionsForDataset(
         .add(mean)
         .dataSync()[0];
 
-      if (lastYear + i <= currentYear + yearsToPredict) {
+      if (lastYear + i <= 2030) { // Forcer la prédiction jusqu'à 2030
         predictions.push({
           year: lastYear + i,
           predictedValue: Math.max(0, prediction),
