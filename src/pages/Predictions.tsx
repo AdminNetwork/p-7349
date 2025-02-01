@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import { PredictionChart } from "@/components/PredictionChart";
 import { generatePredictions } from "@/utils/predictions";
@@ -13,6 +13,7 @@ export default function Predictions() {
   const [isLoading, setIsLoading] = useState(false);
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
   const [rawData, setRawData] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -22,33 +23,48 @@ export default function Predictions() {
       
       console.log("Données stockées récupérées:", { storedData, storedRawData });
       
-      if (storedData && storedRawData) {
+      if (!storedData || !storedRawData) {
+        console.log("Aucune donnée stockée trouvée");
+        setError("Veuillez d'abord importer des données dans l'onglet Import");
+        return;
+      }
+
+      try {
         const budgetData: BudgetData[] = JSON.parse(storedData);
         setRawData(JSON.parse(storedRawData));
         
-        setIsLoading(true);
-        try {
-          console.log("Génération des prédictions avec les données:", budgetData);
-          const newPredictions = await generatePredictions(budgetData);
-          console.log("Nouvelles prédictions générées:", newPredictions);
-          setPredictions(newPredictions);
-          
-          toast({
-            title: "Prédictions générées",
-            description: "Les prédictions ont été générées avec succès",
-          });
-        } catch (error) {
-          console.error("Erreur lors de la génération des prédictions:", error);
-          toast({
-            title: "Erreur",
-            description: "Impossible de générer les prédictions",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoading(false);
+        if (!budgetData || budgetData.length === 0) {
+          setError("Les données importées sont vides ou invalides");
+          return;
         }
-      } else {
-        console.log("Aucune donnée stockée trouvée");
+        
+        setIsLoading(true);
+        setError(null);
+        
+        console.log("Génération des prédictions avec les données:", budgetData);
+        const newPredictions = await generatePredictions(budgetData);
+        
+        if (!newPredictions || newPredictions.length === 0) {
+          throw new Error("Aucune prédiction n'a pu être générée");
+        }
+        
+        console.log("Nouvelles prédictions générées:", newPredictions);
+        setPredictions(newPredictions);
+        
+        toast({
+          title: "Prédictions générées",
+          description: "Les prédictions ont été générées avec succès",
+        });
+      } catch (error) {
+        console.error("Erreur lors de la génération des prédictions:", error);
+        setError(error instanceof Error ? error.message : "Une erreur est survenue lors de la génération des prédictions");
+        toast({
+          title: "Erreur",
+          description: error instanceof Error ? error.message : "Impossible de générer les prédictions",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -57,6 +73,10 @@ export default function Predictions() {
 
   const exportPredictions = () => {
     try {
+      if (!predictions.length || !rawData.length) {
+        throw new Error("Aucune donnée à exporter");
+      }
+
       console.log("Début de l'export des prédictions");
       const wb = XLSX.utils.book_new();
       
@@ -92,7 +112,7 @@ export default function Predictions() {
       console.error("Erreur lors de l'export:", error);
       toast({
         title: "Erreur d'export",
-        description: "Une erreur est survenue lors de l'export des prédictions",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'export des prédictions",
         variant: "destructive",
       });
     }
@@ -123,6 +143,12 @@ export default function Predictions() {
           <CardContent className="flex items-center justify-center py-6">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">Génération des prédictions en cours...</span>
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-6 text-red-500">
+            <span>{error}</span>
           </CardContent>
         </Card>
       ) : predictions.length > 0 ? (
