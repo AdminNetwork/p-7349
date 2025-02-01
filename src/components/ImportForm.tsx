@@ -79,7 +79,6 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         localStorage.setItem('rawExcelData', JSON.stringify(cleanedData));
 
         const formattedData: BudgetData[] = cleanedData
-          .filter(row => row.Fournisseur && row.Axe && row.Montant)
           .map((row: any) => ({
             fournisseur: row.Fournisseur?.toString().trim() || '',
             axe: row.Axe?.toString().trim() || '',
@@ -87,13 +86,10 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
             montant: typeof row.Montant === 'number' 
               ? row.Montant 
               : parseFloat(row.Montant?.toString().replace(/[^\d.-]/g, '')) || 0
-          }));
+          }))
+          .filter(row => row.montant !== 0); // On filtre uniquement les lignes avec un montant nul
         
         console.log("Données formatées pour les prédictions:", formattedData);
-        
-        if (formattedData.length === 0) {
-          throw new Error("Aucune donnée valide n'a été trouvée dans le fichier");
-        }
         
         setBudgetData(formattedData);
         localStorage.setItem('budgetData', JSON.stringify(formattedData));
