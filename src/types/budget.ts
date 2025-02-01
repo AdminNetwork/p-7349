@@ -1,7 +1,18 @@
 export interface BudgetData {
-  Fournisseur: string;
-  Axe: string;
+  Axe_IT: string;
   Annee: string | number;
   Montant: string | number;
-  [key: string]: any; // Pour permettre d'autres colonnes optionnelles
+  Contrepartie?: string;
+  Lib_Long?: string;
+  [key: string]: any;
+}
+
+export interface DetailedPredictionData {
+  year: number;
+  actualValue?: number;
+  predictedValue: number;
+  axe: string;
+  isTotal: boolean;
+  contrepartie?: string;
+  libLong?: string;
 }

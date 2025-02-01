@@ -119,12 +119,14 @@ export default function Predictions() {
     }
   };
 
-  const uniqueAxes = predictions.reduce((acc, curr) => {
-    if (!acc.includes(curr.axe)) {
-      acc.push(curr.axe);
-    }
-    return acc;
-  }, [] as string[]);
+  const uniqueAxes = predictions
+    .filter(p => p.isTotal)
+    .reduce((acc, curr) => {
+      if (!acc.includes(curr.axe)) {
+        acc.push(curr.axe);
+      }
+      return acc;
+    }, [] as string[]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -152,14 +154,27 @@ export default function Predictions() {
           </CardContent>
         </Card>
       ) : predictions.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {uniqueAxes.map(axe => (
-            <PredictionChart
-              key={axe}
-              predictions={predictions}
-              axe={axe}
-            />
-          ))}
+        <div className="space-y-8">
+          <div className="grid gap-4 md:grid-cols-2">
+            {uniqueAxes.map(axe => (
+              <PredictionChart
+                key={`total-${axe}`}
+                predictions={predictions}
+                axe={axe}
+                showDetails={false}
+              />
+            ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {uniqueAxes.map(axe => (
+              <PredictionChart
+                key={`details-${axe}`}
+                predictions={predictions}
+                axe={axe}
+                showDetails={true}
+              />
+            ))}
+          </div>
         </div>
       ) : (
         <Card>
