@@ -22,31 +22,6 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
   const [predictions, setPredictionsLocal] = useState<PredictionData[]>([]);
   const [isGeneratingPredictions, setIsGeneratingPredictions] = useState(false);
 
-  const cleanExcelData = (data: any[]): any[] => {
-    return data
-      .filter(row => {
-        const hasValidData = Object.values(row).some(value => 
-          value !== null && value !== undefined && value !== ''
-        );
-        return hasValidData;
-      })
-      .map(row => {
-        const cleanedRow: any = {};
-        Object.entries(row).forEach(([key, value]) => {
-          if (typeof value === 'string') {
-            cleanedRow[key.trim()] = value.trim();
-          } else if (typeof value === 'number') {
-            cleanedRow[key.trim()] = value;
-          } else if (value === null || value === undefined) {
-            cleanedRow[key.trim()] = '';
-          } else {
-            cleanedRow[key.trim()] = value.toString().trim();
-          }
-        });
-        return cleanedRow;
-      });
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -61,48 +36,15 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
 
-        if (!worksheet) {
-          throw new Error("Impossible de lire la première feuille du fichier Excel");
-        }
-
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-          raw: false,
-          defval: '',
-        });
-        
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
         console.log("Données Excel brutes:", jsonData);
         
-        const cleanedData = cleanExcelData(jsonData);
-        console.log("Données nettoyées:", cleanedData);
+        setRawExcelData(jsonData);
+        localStorage.setItem('rawExcelData', JSON.stringify(jsonData));
         
-        setRawExcelData(cleanedData);
-        localStorage.setItem('rawExcelData', JSON.stringify(cleanedData));
-
-        const formattedData: BudgetData[] = cleanedData
-          .map((row: any) => ({
-            fournisseur: row.Fournisseur?.toString().trim() || '',
-            axe: row.Axe?.toString().trim() || '',
-            annee: row.Annee?.toString().trim() || '',
-            montant: typeof row.Montant === 'number' 
-              ? row.Montant 
-              : parseFloat(row.Montant?.toString().replace(/[^\d.-]/g, '')) || 0
-          }))
-          .filter(row => 
-            row.fournisseur && 
-            row.axe && 
-            row.annee && 
-            !isNaN(row.montant) && 
-            row.montant !== 0
-          );
-        
-        console.log("Données formatées pour les prédictions:", formattedData);
-        
-        if (formattedData.length === 0) {
-          throw new Error("Aucune donnée valide n'a été trouvée dans le fichier. Assurez-vous que les colonnes Fournisseur, Axe, Annee et Montant sont présentes et contiennent des valeurs valides.");
-        }
-        
-        setBudgetData(formattedData);
-        localStorage.setItem('budgetData', JSON.stringify(formattedData));
+        // On utilise directement les données sans transformation
+        setBudgetData(jsonData as BudgetData[]);
+        localStorage.setItem('budgetData', JSON.stringify(jsonData));
         
         setPredictions([]);
         setPredictionsLocal([]);
@@ -114,12 +56,12 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         });
 
         // Générer automatiquement les prédictions après l'import
-        await handleGeneratePredictions(formattedData);
+        await handleGeneratePredictions(jsonData as BudgetData[]);
       } catch (error) {
         console.error("Erreur lors de l'import:", error);
         toast({
           title: "Erreur d'import",
-          description: error instanceof Error ? error.message : "Le format du fichier n'est pas correct",
+          description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'import",
           variant: "destructive",
         });
       }
