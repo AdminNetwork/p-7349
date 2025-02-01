@@ -42,7 +42,6 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
         setRawExcelData(jsonData);
         localStorage.setItem('rawExcelData', JSON.stringify(jsonData));
         
-        // On utilise directement les données sans transformation
         setBudgetData(jsonData as BudgetData[]);
         localStorage.setItem('budgetData', JSON.stringify(jsonData));
         
@@ -55,7 +54,6 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
           description: "",
         });
 
-        // Générer automatiquement les prédictions après l'import
         await handleGeneratePredictions(jsonData as BudgetData[]);
       } catch (error) {
         console.error("Erreur lors de l'import:", error);
@@ -120,10 +118,9 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
     }
   };
 
-  const uniqueCombinations = predictions.reduce((acc, curr) => {
-    const key = `${curr.fournisseur}-${curr.axe}`;
-    if (!acc.includes(key)) {
-      acc.push(key);
+  const uniqueAxes = predictions.reduce((acc, curr) => {
+    if (!acc.includes(curr.axe)) {
+      acc.push(curr.axe);
     }
     return acc;
   }, [] as string[]);
@@ -154,17 +151,13 @@ export const ImportForm = ({ setBudgetData, setRawExcelData, setPredictions, bud
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
-              {uniqueCombinations.map(combo => {
-                const [fournisseur, axe] = combo.split('-');
-                return (
-                  <PredictionChart
-                    key={combo}
-                    predictions={predictions}
-                    fournisseur={fournisseur}
-                    axe={axe}
-                  />
-                );
-              })}
+              {uniqueAxes.map(axe => (
+                <PredictionChart
+                  key={axe}
+                  predictions={predictions}
+                  axe={axe}
+                />
+              ))}
             </div>
           </>
         )}

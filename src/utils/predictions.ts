@@ -4,7 +4,6 @@ export interface PredictionData {
   year: number;
   actualValue?: number;
   predictedValue: number;
-  fournisseur: string;
   axe: string;
 }
 
@@ -12,7 +11,7 @@ export async function generatePredictions(
   historicalData: Array<any>,
   yearsToPredict: number = 10
 ): Promise<PredictionData[]> {
-  console.log("Données brutes reçues:", historicalData);
+  console.log("Début de la génération des prédictions avec les données:", historicalData);
 
   // Identifier les colonnes qui contiennent les années (ANNEE_XXXX)
   const yearColumns = Object.keys(historicalData[0] || {}).filter(key => 
@@ -23,7 +22,7 @@ export async function generatePredictions(
 
   // Transformer les données en format utilisable
   const validData = historicalData
-    .filter(entry => entry.Axe_IT && yearColumns.some(col => entry[col] !== undefined))
+    .filter(entry => entry.Axe_IT && entry.Axe_IT.startsWith('Total'))
     .map(entry => {
       const dataPoints = yearColumns.map(col => ({
         year: parseInt(col.split('_')[1]),
@@ -33,14 +32,13 @@ export async function generatePredictions(
       })).filter(point => !isNaN(point.value));
 
       return {
-        fournisseur: entry.Axe_IT,
-        axe: entry.Groupe2 || 'Default',
+        axe: entry.Axe_IT.replace('Total ', ''),
         dataPoints
       };
     })
     .filter(entry => entry.dataPoints.length > 0);
 
-  console.log("Données transformées:", validData);
+  console.log("Données transformées par axe IT:", validData);
 
   if (validData.length === 0) {
     throw new Error("Aucune donnée valide trouvée pour générer les prédictions");
@@ -48,10 +46,10 @@ export async function generatePredictions(
 
   const allPredictions: PredictionData[] = [];
 
-  // Pour chaque entrée, générer des prédictions
+  // Pour chaque axe IT, générer des prédictions
   for (const entry of validData) {
     if (entry.dataPoints.length < 2) {
-      console.log(`Données insuffisantes pour ${entry.fournisseur}-${entry.axe}`);
+      console.log(`Données insuffisantes pour l'axe ${entry.axe}`);
       continue;
     }
 
@@ -63,7 +61,6 @@ export async function generatePredictions(
       // Normaliser les données
       const mean = tf.mean(values);
       const std = tf.moments(values).variance.sqrt();
-
       const normalizedValues = tf.sub(values, mean).div(std);
 
       // Créer et entraîner le modèle
@@ -97,7 +94,6 @@ export async function generatePredictions(
         allPredictions.push({
           year: yearToPredict,
           predictedValue: Math.max(0, prediction),
-          fournisseur: entry.fournisseur,
           axe: entry.axe
         });
       }
@@ -108,7 +104,6 @@ export async function generatePredictions(
           year: d.year,
           actualValue: d.value,
           predictedValue: d.value,
-          fournisseur: entry.fournisseur,
           axe: entry.axe
         });
       });
@@ -121,7 +116,7 @@ export async function generatePredictions(
       xs.dispose();
 
     } catch (error) {
-      console.error(`Erreur lors de la génération des prédictions pour ${entry.fournisseur}-${entry.axe}:`, error);
+      console.error(`Erreur lors de la génération des prédictions pour l'axe ${entry.axe}:`, error);
     }
   }
 

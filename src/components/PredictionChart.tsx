@@ -5,20 +5,19 @@ import type { PredictionData } from '@/utils/predictions';
 
 interface PredictionChartProps {
   predictions: PredictionData[];
-  fournisseur: string;
   axe: string;
 }
 
-export function PredictionChart({ predictions, fournisseur, axe }: PredictionChartProps) {
-  const filteredData = predictions.filter(
-    p => p.fournisseur === fournisseur && p.axe === axe
-  ).sort((a, b) => a.year - b.year);
+export function PredictionChart({ predictions, axe }: PredictionChartProps) {
+  const filteredData = predictions
+    .filter(p => p.axe === axe)
+    .sort((a, b) => a.year - b.year);
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-sm">
-          Prédictions pour {fournisseur} - {axe}
+          Prédictions pour l'axe {axe}
         </CardTitle>
       </CardHeader>
       <CardContent>
