@@ -33,17 +33,13 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
     })
     .sort((a, b) => {
       if (showDetails) {
-        // Tri par contrepartie pour la vue détaillée
-        const contrepartieA = `${a.contrepartie || ''} ${a.libLong || ''}`.trim();
-        const contrepartieB = `${b.contrepartie || ''} ${b.libLong || ''}`.trim();
-        return contrepartieA.localeCompare(contrepartieB);
+        return a.contrepartie?.localeCompare(b.contrepartie || '') || 0;
       }
       return a.year - b.year;
     });
 
   console.log("Filtered data:", filteredData);
 
-  // Formateur pour les montants en euros
   const formatEuro = (value: number) => 
     new Intl.NumberFormat('fr-FR', { 
       style: 'currency', 
@@ -52,9 +48,9 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
       maximumFractionDigits: 2
     }).format(value);
 
-  // Pour le graphique en barres, restructurer les données
   const barData = showDetails ? filteredData.map(d => ({
-    contrepartie: `${d.contrepartie || ''} ${d.libLong || ''}`.trim(),
+    contrepartie: d.contrepartie || '',
+    libLong: d.libLong || '',
     Réel: d.actualValue || 0,
     Budget: d.predictedValue || 0,
     year: d.year
@@ -73,9 +69,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
           textAnchor="end"
           fill="#666"
           transform="rotate(-45)"
-          style={{
-            fontSize: '10px'
-          }}
+          style={{ fontSize: '10px' }}
         >
           <tspan x={0} dy="0">{payload.value}</tspan>
         </text>
@@ -105,7 +99,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
-                  dataKey="contrepartie" 
+                  dataKey="contrepartie"
                   angle={-45}
                   textAnchor="end"
                   height={100}
@@ -118,7 +112,13 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                 />
                 <Tooltip 
                   formatter={(value: number) => formatEuro(value)}
-                  labelFormatter={(label) => `Contrepartie: ${label}`}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      const data = payload[0].payload;
+                      return `${data.contrepartie}\n${data.libLong}\nAnnée: ${data.year}`;
+                    }
+                    return '';
+                  }}
                 />
                 <Legend />
                 <Bar 
