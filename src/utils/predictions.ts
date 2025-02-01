@@ -41,10 +41,16 @@ export async function generatePredictions(
     const values = data.map(d => d.value);
     const years = data.map(d => d.year);
     
-    // Normaliser les données
+    // Calculer la moyenne
     const mean = tf.mean(values);
-    const std = tf.std(values);
-    const normalizedValues = tf.sub(values, mean).div(std);
+
+    // Calculer l'écart-type manuellement
+    const squaredDiffs = tf.sub(values, mean).square();
+    const variance = tf.mean(squaredDiffs);
+    const standardDeviation = tf.sqrt(variance);
+
+    // Normaliser les données
+    const normalizedValues = tf.sub(values, mean).div(standardDeviation);
 
     // Créer et entraîner un modèle simple de régression
     const model = tf.sequential();
@@ -71,7 +77,7 @@ export async function generatePredictions(
       ) as tf.Tensor;
       
       const prediction = normalizedPrediction
-        .mul(std)
+        .mul(standardDeviation)
         .add(mean)
         .dataSync()[0];
 
@@ -96,6 +102,10 @@ export async function generatePredictions(
 
     // Nettoyer les tenseurs
     model.dispose();
+    mean.dispose();
+    standardDeviation.dispose();
+    normalizedValues.dispose();
+    xs.dispose();
   }
 
   console.log("Prédictions générées:", allPredictions);
