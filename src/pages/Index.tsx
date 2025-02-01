@@ -8,6 +8,9 @@ import { useToast } from "@/components/ui/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Download } from "lucide-react"
+import { generatePredictions } from "@/utils/predictions"
+import { PredictionChart } from "@/components/PredictionChart"
+import type { PredictionData } from "@/utils/predictions"
 
 interface BudgetData {
   fournisseur: string
@@ -19,6 +22,7 @@ interface BudgetData {
 export default function Index() {
   const [budgetData, setBudgetData] = useState<BudgetData[]>([])
   const [rawExcelData, setRawExcelData] = useState<any[]>([])
+  const [predictions, setPredictions] = useState<PredictionData[]>([])
   const { toast } = useToast()
 
   const cleanExcelData = (data: any[]): any[] => {
@@ -46,14 +50,14 @@ export default function Index() {
       })
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     console.log("Fichier sélectionné:", file.name)
 
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = e.target?.result
         const workbook = XLSX.read(data, { type: 'binary' })
@@ -89,6 +93,10 @@ export default function Index() {
 
         console.log("Données formatées:", formattedData)
         setBudgetData(formattedData)
+
+        // Générer les prédictions
+        const predictionResults = await generatePredictions(formattedData)
+        setPredictions(predictionResults)
         
         toast({
           title: "Import réussi",
@@ -127,21 +135,20 @@ export default function Index() {
     }
   }
 
-  const chartData = budgetData.reduce((acc: any[], curr) => {
-    const existingData = acc.find(item => item.axe === curr.axe)
-    if (existingData) {
-      existingData.montant += curr.montant
-    } else {
-      acc.push({ axe: curr.axe, montant: curr.montant })
+  const uniqueCombinations = budgetData.reduce((acc, curr) => {
+    const key = `${curr.fournisseur}-${curr.axe}`
+    if (!acc.includes(key)) {
+      acc.push(key)
     }
     return acc
-  }, [])
+  }, [] as string[])
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Prédiction Budgétaire IT</h2>
       </div>
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
@@ -158,7 +165,7 @@ export default function Index() {
               <div className="mt-4">
                 <h3 className="font-semibold mb-2">Répartition par Axe IT</h3>
                 <div className="w-full overflow-x-auto">
-                  <BarChart width={600} height={300} data={chartData}>
+                  <BarChart width={600} height={300} data={budgetData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="axe" />
                     <YAxis />
@@ -204,6 +211,22 @@ export default function Index() {
         </Card>
       </div>
 
+      {predictions.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {uniqueCombinations.map(combo => {
+            const [fournisseur, axe] = combo.split('-')
+            return (
+              <PredictionChart
+                key={combo}
+                predictions={predictions}
+                fournisseur={fournisseur}
+                axe={axe}
+              />
+            )
+          })}
+        </div>
+      )}
+
       {rawExcelData.length > 0 && (
         <Card className="col-span-7 mt-4">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -218,7 +241,7 @@ export default function Index() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    {Object.keys(rawExcelData[0]).map((header) => (
+                    {Object.keys(rawExcelData[0] || {}).map((header) => (
                       <TableHead key={header}>{header}</TableHead>
                     ))}
                   </TableRow>
