@@ -5,48 +5,85 @@ import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import { PredictionChart } from "@/components/PredictionChart";
+import { Progress } from "@/components/ui/progress";
 import type { PredictionData } from "@/utils/predictions";
 
 export default function PredictionsDetails() {
   const [isLoading, setIsLoading] = useState(false);
   const [predictions, setPredictions] = useState<PredictionData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const storedPredictions = localStorage.getItem('predictions');
-        
-        if (!storedPredictions) {
-          setError("Veuillez d'abord générer des prédictions dans l'onglet Import");
-          return;
-        }
+        const isGenerating = localStorage.getItem('isGeneratingPredictions') === 'true';
+        if (isGenerating) {
+          setIsLoading(true);
+          setProgress(0);
+          const interval = setInterval(() => {
+            setProgress(prev => {
+              if (prev >= 90) return prev;
+              return prev + 10;
+            });
+          }, 500);
 
-        const parsedPredictions: PredictionData[] = JSON.parse(storedPredictions);
-        if (!parsedPredictions || parsedPredictions.length === 0) {
-          setError("Aucune prédiction disponible");
-          return;
-        }
+          // Vérifier périodiquement si la génération est terminée
+          const checkInterval = setInterval(() => {
+            const stillGenerating = localStorage.getItem('isGeneratingPredictions') === 'true';
+            if (!stillGenerating) {
+              clearInterval(interval);
+              clearInterval(checkInterval);
+              setProgress(100);
+              setTimeout(() => {
+                setIsLoading(false);
+                loadPredictions();
+              }, 500);
+            }
+          }, 500);
 
-        setIsLoading(true);
-        setPredictions(parsedPredictions);
-        
+          return () => {
+            clearInterval(interval);
+            clearInterval(checkInterval);
+          };
+        } else {
+          loadPredictions();
+        }
       } catch (error) {
-        console.error("Erreur lors du chargement des prédictions détaillées:", error);
-        setError(error instanceof Error ? error.message : "Une erreur est survenue");
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les prédictions détaillées",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+        handleError(error);
       }
     };
 
     loadData();
   }, [toast]);
+
+  const loadPredictions = () => {
+    const storedPredictions = localStorage.getItem('predictions');
+    if (!storedPredictions) {
+      setError("Veuillez d'abord générer des prédictions dans l'onglet Import");
+      return;
+    }
+
+    const parsedPredictions: PredictionData[] = JSON.parse(storedPredictions);
+    if (!parsedPredictions || parsedPredictions.length === 0) {
+      setError("Aucune prédiction disponible");
+      return;
+    }
+
+    setPredictions(parsedPredictions);
+  };
+
+  const handleError = (error: any) => {
+    console.error("Erreur lors du chargement des prédictions détaillées:", error);
+    setError(error instanceof Error ? error.message : "Une erreur est survenue");
+    setIsLoading(false);
+    toast({
+      title: "Erreur",
+      description: "Impossible de charger les prédictions détaillées",
+      variant: "destructive",
+    });
+  };
 
   const handleExport = () => {
     try {
@@ -95,9 +132,12 @@ export default function PredictionsDetails() {
 
       {isLoading ? (
         <Card>
-          <CardContent className="flex items-center justify-center py-6">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Chargement des prédictions détaillées...</span>
+          <CardContent className="flex flex-col items-center justify-center py-6 space-y-4">
+            <Progress value={progress} className="w-[60%]" />
+            <div className="flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Génération des prédictions en cours...</span>
+            </div>
           </CardContent>
         </Card>
       ) : error ? (
