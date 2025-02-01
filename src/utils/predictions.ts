@@ -11,6 +11,7 @@ export async function generatePredictions(
 
   const allPredictions: DetailedPredictionData[] = [];
   const currentYear = new Date().getFullYear();
+  const maxPredictionYear = currentYear + yearsToPredict;
 
   // Traiter les totaux et les détails
   for (const entry of historicalData) {
@@ -21,10 +22,11 @@ export async function generatePredictions(
     const dataPoints = [];
     
     // Parcourir toutes les années possibles
-    for (let year = 2020; year <= currentYear + yearsToPredict; year++) {
+    for (let year = 2020; year <= maxPredictionYear; year++) {
       const realKey = `ANNEE_${year}`;
       const budgetKey = `BUDGET_${year}`;
       const atterissageKey = `ATTERISSAGE_${year}`;
+      const planKey = `PLAN_${year}`;
       
       let actualValue = null;
       let predictedValue = null;
@@ -35,14 +37,17 @@ export async function generatePredictions(
         actualValue = typeof entry[realKey] === 'string' ? parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : entry[realKey];
       }
       
-      // Vérifier d'abord s'il existe une valeur de budget
+      // Vérifier dans l'ordre : budget, atterrissage, plan
       if (entry[budgetKey] !== undefined && entry[budgetKey] !== null && entry[budgetKey] !== '') {
         predictedValue = typeof entry[budgetKey] === 'string' ? parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : entry[budgetKey];
         hasBudget = true;
       } 
-      // Sinon, vérifier l'atterrissage
       else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
         predictedValue = typeof entry[atterissageKey] === 'string' ? parseFloat(entry[atterissageKey].replace(/[^\d.-]/g, '')) : entry[atterissageKey];
+        hasBudget = true;
+      }
+      else if (entry[planKey] !== undefined && entry[planKey] !== null && entry[planKey] !== '') {
+        predictedValue = typeof entry[planKey] === 'string' ? parseFloat(entry[planKey].replace(/[^\d.-]/g, '')) : entry[planKey];
         hasBudget = true;
       }
       
@@ -65,7 +70,7 @@ export async function generatePredictions(
       // Filtrer les points pour l'entraînement (exclure les années avec budget)
       const trainingPoints = dataPoints.filter(point => !point.hasBudget);
       
-      // Générer les prédictions uniquement pour les années futures sans budget
+      // Générer les prédictions pour toutes les années futures
       const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, yearsToPredict);
       
       predictions.forEach(pred => {
@@ -90,7 +95,7 @@ async function generatePredictionsForDataset(
   allDataPoints: { year: number; actualValue: number | null; predictedValue: number; hasBudget: boolean }[],
   yearsToPredict: number
 ): Promise<DetailedPredictionData[]> {
-  // Utiliser uniquement les points sans budget pour l'entraînement
+  const currentYear = new Date().getFullYear();
   const values = trainingPoints.map(d => d.predictedValue);
   const years = trainingPoints.map(d => d.year);
 
@@ -116,7 +121,7 @@ async function generatePredictionsForDataset(
 
   const predictions: DetailedPredictionData[] = [];
 
-  // Ajouter toutes les données historiques
+  // Ajouter toutes les données historiques et budgétées
   allDataPoints.forEach(d => {
     predictions.push({
       year: d.year,
@@ -127,7 +132,7 @@ async function generatePredictionsForDataset(
     });
   });
 
-  // Générer les prédictions uniquement pour les années futures sans données de budget
+  // Générer les prédictions pour les années futures sans données
   const lastYear = Math.max(...allDataPoints.map(d => d.year));
   const lastDataPoint = allDataPoints.find(d => d.year === lastYear);
   
@@ -142,12 +147,14 @@ async function generatePredictionsForDataset(
         .add(mean)
         .dataSync()[0];
 
-      predictions.push({
-        year: lastYear + i,
-        predictedValue: Math.max(0, prediction),
-        axe: '', // sera rempli par la fonction appelante
-        isTotal: false // sera rempli par la fonction appelante
-      });
+      if (lastYear + i <= currentYear + yearsToPredict) {
+        predictions.push({
+          year: lastYear + i,
+          predictedValue: Math.max(0, prediction),
+          axe: '', // sera rempli par la fonction appelante
+          isTotal: false // sera rempli par la fonction appelante
+        });
+      }
     }
   }
 
