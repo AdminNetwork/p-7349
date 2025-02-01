@@ -1,6 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from 'recharts';
 import type { PredictionData } from '@/utils/predictions';
 
 interface PredictionChartProps {
@@ -23,6 +34,21 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
     ? [...new Set(filteredData.map(d => d.contrepartie || d.libLong))]
     : [];
 
+  // Formatter pour les montants en euros
+  const formatEuro = (value: number) => 
+    new Intl.NumberFormat('fr-FR', { 
+      style: 'currency', 
+      currency: 'EUR' 
+    }).format(value);
+
+  // Pour le graphique en barres, nous devons restructurer les données
+  const barData = showDetails ? filteredData.map(d => ({
+    group: `${d.contrepartie || ''} ${d.libLong || ''}`.trim(),
+    Réel: d.actualValue || 0,
+    Budget: d.predictedValue || 0,
+    year: d.year
+  })) : [];
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -31,61 +57,71 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
+        <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={filteredData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="year"
-                type="number"
-                domain={['auto', 'auto']}
-              />
-              <YAxis />
-              <Tooltip 
-                formatter={(value: number) => 
-                  new Intl.NumberFormat('fr-FR', { 
-                    style: 'currency', 
-                    currency: 'EUR' 
-                  }).format(value)
-                }
-                labelFormatter={(label) => `Année: ${label}`}
-              />
-              <Legend />
-              {showDetails ? (
-                detailGroups.map((group, index) => (
-                  <Line
-                    key={group}
-                    type="monotone"
-                    dataKey="predictedValue"
-                    data={filteredData.filter(d => (d.contrepartie || d.libLong) === group)}
-                    name={group}
-                    stroke={`hsl(${index * 360 / detailGroups.length}, 70%, 50%)`}
-                    strokeWidth={2}
-                    dot={true}
-                  />
-                ))
-              ) : (
-                <>
-                  <Line
-                    type="monotone"
-                    dataKey="actualValue"
-                    stroke="#8884d8"
-                    name="Valeurs réelles"
-                    strokeWidth={2}
-                    dot={true}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="predictedValue"
-                    stroke="#82ca9d"
-                    name="Prédictions"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
-                  />
-                </>
-              )}
-            </LineChart>
+            {showDetails ? (
+              <BarChart data={barData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="group" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  interval={0}
+                  tick={{fontSize: 10}}
+                />
+                <YAxis 
+                  tickFormatter={formatEuro}
+                />
+                <Tooltip 
+                  formatter={(value: number) => formatEuro(value)}
+                  labelFormatter={(label) => `Groupe: ${label}`}
+                />
+                <Legend />
+                <Bar 
+                  dataKey="Réel" 
+                  fill="#8884d8" 
+                  name="Valeurs réelles"
+                />
+                <Bar 
+                  dataKey="Budget" 
+                  fill="#82ca9d" 
+                  name="Budget/Prévisions"
+                />
+              </BarChart>
+            ) : (
+              <LineChart data={filteredData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="year"
+                  type="number"
+                  domain={['auto', 'auto']}
+                />
+                <YAxis tickFormatter={formatEuro} />
+                <Tooltip 
+                  formatter={(value: number) => formatEuro(value)}
+                  labelFormatter={(label) => `Année: ${label}`}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="actualValue"
+                  stroke="#8884d8"
+                  name="Valeurs réelles"
+                  strokeWidth={2}
+                  dot={true}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="predictedValue"
+                  stroke="#82ca9d"
+                  name="Budget/Prévisions"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={false}
+                />
+              </LineChart>
+            )}
           </ResponsiveContainer>
         </div>
       </CardContent>
