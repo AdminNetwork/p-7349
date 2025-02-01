@@ -30,13 +30,18 @@ export default function Index() {
       try {
         const data = e.target?.result
         const workbook = XLSX.read(data, { type: 'binary' })
-        const sheetName = "Suivi budget IT-Nature"
-        const worksheet = workbook.Sheets[sheetName]
+        
+        // Récupérer la première feuille du classeur
+        const firstSheetName = workbook.SheetNames[0]
+        console.log("Nom de la première feuille:", firstSheetName)
+        
+        const worksheet = workbook.Sheets[firstSheetName]
 
         if (!worksheet) {
-          throw new Error("Feuille 'Suivi budget IT-Nature' non trouvée")
+          throw new Error("Impossible de lire la première feuille du fichier Excel")
         }
 
+        // Convertir le tableau croisé en JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
         console.log("Données brutes importées:", jsonData)
         setRawExcelData(jsonData)
@@ -52,7 +57,7 @@ export default function Index() {
         setBudgetData(formattedData)
         toast({
           title: "Import réussi",
-          description: `${formattedData.length} lignes importées`,
+          description: `${formattedData.length} lignes importées depuis la feuille "${firstSheetName}"`,
         })
       } catch (error) {
         console.error("Erreur lors de l'import:", error)
