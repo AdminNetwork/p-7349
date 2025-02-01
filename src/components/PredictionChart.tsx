@@ -91,8 +91,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                   interval={0}
                   tick={{
                     fontSize: 10,
-                    width: 200,
-                    wordWrap: 'break-word'
+                    width: 200
                   }}
                 />
                 <YAxis 
