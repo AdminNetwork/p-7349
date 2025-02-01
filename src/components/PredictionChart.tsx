@@ -45,7 +45,7 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-sm">
-          Détails pour l'axe {axe}
+          {showDetails ? `Détails pour l'axe ${axe}` : `Totaux pour l'axe ${axe}`}
         </CardTitle>
       </CardHeader>
       <CardContent>
