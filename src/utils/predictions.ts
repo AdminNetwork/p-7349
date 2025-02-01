@@ -21,31 +21,38 @@ export async function generatePredictions(
     const dataPoints = [];
     
     // Parcourir toutes les années possibles
-    for (let year = 2020; year <= currentYear + 1; year++) {
+    for (let year = 2020; year <= currentYear + yearsToPredict; year++) {
       const realKey = `ANNEE_${year}`;
       const budgetKey = `BUDGET_${year}`;
       const atterissageKey = `ATTERISSAGE_${year}`;
       
       let actualValue = null;
       let predictedValue = null;
+      let hasBudget = false;
       
       // Pour les valeurs réelles
       if (entry[realKey] !== undefined && entry[realKey] !== null && entry[realKey] !== '') {
         actualValue = typeof entry[realKey] === 'string' ? parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : entry[realKey];
       }
       
-      // Pour les prévisions (budget ou atterrissage)
+      // Vérifier d'abord s'il existe une valeur de budget
       if (entry[budgetKey] !== undefined && entry[budgetKey] !== null && entry[budgetKey] !== '') {
         predictedValue = typeof entry[budgetKey] === 'string' ? parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : entry[budgetKey];
-      } else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
+        hasBudget = true;
+      } 
+      // Sinon, vérifier l'atterrissage
+      else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
         predictedValue = typeof entry[atterissageKey] === 'string' ? parseFloat(entry[atterissageKey].replace(/[^\d.-]/g, '')) : entry[atterissageKey];
+        hasBudget = true;
       }
       
+      // Si nous avons une valeur réelle ou une prévision
       if (actualValue !== null || predictedValue !== null) {
         dataPoints.push({
           year,
           actualValue,
-          predictedValue: predictedValue || actualValue
+          predictedValue: hasBudget ? predictedValue : actualValue,
+          hasBudget
         });
       }
     }
@@ -55,7 +62,12 @@ export async function generatePredictions(
     if (dataPoints.length < 2) continue;
 
     try {
-      const predictions = await generatePredictionsForDataset(dataPoints, yearsToPredict);
+      // Filtrer les points pour l'entraînement (exclure les années avec budget)
+      const trainingPoints = dataPoints.filter(point => !point.hasBudget);
+      
+      // Générer les prédictions uniquement pour les années futures sans budget
+      const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, yearsToPredict);
+      
       predictions.forEach(pred => {
         allPredictions.push({
           ...pred,
@@ -74,11 +86,13 @@ export async function generatePredictions(
 }
 
 async function generatePredictionsForDataset(
-  dataPoints: { year: number; actualValue: number | null; predictedValue: number }[],
+  trainingPoints: { year: number; actualValue: number | null; predictedValue: number; hasBudget: boolean }[],
+  allDataPoints: { year: number; actualValue: number | null; predictedValue: number; hasBudget: boolean }[],
   yearsToPredict: number
 ): Promise<DetailedPredictionData[]> {
-  const values = dataPoints.map(d => d.predictedValue);
-  const years = dataPoints.map(d => d.year);
+  // Utiliser uniquement les points sans budget pour l'entraînement
+  const values = trainingPoints.map(d => d.predictedValue);
+  const years = trainingPoints.map(d => d.year);
 
   // Normaliser les données
   const mean = tf.mean(values);
@@ -94,7 +108,7 @@ async function generatePredictionsForDataset(
     loss: 'meanSquaredError'
   });
 
-  const xs = tf.linspace(0, dataPoints.length - 1, dataPoints.length);
+  const xs = tf.linspace(0, trainingPoints.length - 1, trainingPoints.length);
   await model.fit(xs.reshape([-1, 1]), normalizedValues, {
     epochs: 100,
     verbose: 0
@@ -102,8 +116,8 @@ async function generatePredictionsForDataset(
 
   const predictions: DetailedPredictionData[] = [];
 
-  // Ajouter les données historiques avec leurs valeurs réelles et prédites
-  dataPoints.forEach(d => {
+  // Ajouter toutes les données historiques
+  allDataPoints.forEach(d => {
     predictions.push({
       year: d.year,
       actualValue: d.actualValue || undefined,
@@ -113,24 +127,28 @@ async function generatePredictionsForDataset(
     });
   });
 
-  // Générer les prédictions futures
-  const lastYear = Math.max(...years);
-  for (let i = 1; i <= yearsToPredict; i++) {
-    const normalizedPrediction = model.predict(
-      tf.tensor2d([dataPoints.length + i - 1], [1, 1])
-    ) as tf.Tensor;
-    
-    const prediction = normalizedPrediction
-      .mul(std)
-      .add(mean)
-      .dataSync()[0];
+  // Générer les prédictions uniquement pour les années futures sans données de budget
+  const lastYear = Math.max(...allDataPoints.map(d => d.year));
+  const lastDataPoint = allDataPoints.find(d => d.year === lastYear);
+  
+  if (!lastDataPoint?.hasBudget) {
+    for (let i = 1; i <= yearsToPredict; i++) {
+      const normalizedPrediction = model.predict(
+        tf.tensor2d([trainingPoints.length + i - 1], [1, 1])
+      ) as tf.Tensor;
+      
+      const prediction = normalizedPrediction
+        .mul(std)
+        .add(mean)
+        .dataSync()[0];
 
-    predictions.push({
-      year: lastYear + i,
-      predictedValue: Math.max(0, prediction),
-      axe: '', // sera rempli par la fonction appelante
-      isTotal: false // sera rempli par la fonction appelante
-    });
+      predictions.push({
+        year: lastYear + i,
+        predictedValue: Math.max(0, prediction),
+        axe: '', // sera rempli par la fonction appelante
+        isTotal: false // sera rempli par la fonction appelante
+      });
+    }
   }
 
   // Nettoyer les tenseurs
