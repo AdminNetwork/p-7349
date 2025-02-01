@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   LineChart, 
@@ -8,10 +7,18 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer,
-  BarChart,
-  Bar
+  ResponsiveContainer
 } from 'recharts';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import type { PredictionData } from '@/utils/predictions';
 
 interface PredictionChartProps {
@@ -21,20 +28,23 @@ interface PredictionChartProps {
 }
 
 export function PredictionChart({ predictions, axe, showDetails = false }: PredictionChartProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  
   console.log("Rendering PredictionChart for axe:", axe, "showDetails:", showDetails);
   console.log("Predictions data:", predictions);
 
   const filteredData = predictions
     .filter(p => {
       if (showDetails) {
-        return !p.isTotal && p.axe === axe;
+        const searchMatch = (p.contrepartie?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                          (p.libLong?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+        return !p.isTotal && p.axe === axe && (searchQuery === "" || searchMatch);
       }
       return p.isTotal && p.axe === axe;
     })
     .sort((a, b) => {
       if (showDetails) {
-        // Tri par montant prévu décroissant pour avoir les plus grandes valeurs à gauche
-        return (b.predictedValue || 0) - (a.predictedValue || 0);
+        return a.year - b.year || (a.contrepartie?.localeCompare(b.contrepartie || '') || 0);
       }
       return a.year - b.year;
     });
@@ -49,36 +59,6 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
       maximumFractionDigits: 0
     }).format(value);
 
-  const barData = showDetails ? filteredData.map(d => ({
-    contrepartie: `${d.contrepartie || ''} ${d.libLong || ''}`,
-    PREDICTIONS: d.predictedValue || 0,
-    REELS: d.actualValue || 0,
-    year: d.year
-  })) : [];
-
-  console.log("Bar data:", barData);
-
-  const CustomizedAxisTick = (props: any) => {
-    const { x, y, payload } = props;
-    return (
-      <g transform={`translate(${x},${y})`}>
-        <text
-          x={0}
-          y={0}
-          dy={16}
-          textAnchor="end"
-          fill="#666"
-          transform="rotate(-35)"
-          style={{ fontSize: '12px' }}
-        >
-          {payload.value.length > 30 
-            ? `${payload.value.substring(0, 30)}...` 
-            : payload.value}
-        </text>
-      </g>
-    );
-  };
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -87,58 +67,48 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[500px]">
-          <ResponsiveContainer width="100%" height="100%">
-            {showDetails ? (
-              <BarChart 
-                data={barData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 100,
-                  bottom: 100
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="contrepartie"
-                  angle={-35}
-                  textAnchor="end"
-                  height={100}
-                  interval={0}
-                  tick={<CustomizedAxisTick />}
-                />
-                <YAxis 
-                  tickFormatter={formatEuro}
-                  width={100}
-                  label={{ 
-                    value: 'PREDICTIONS, REELS', 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    offset: 20
-                  }}
-                />
-                <Tooltip 
-                  formatter={(value: number) => formatEuro(value)}
-                  labelFormatter={(label) => label}
-                />
-                <Legend 
-                  verticalAlign="top"
-                  height={36}
-                  wrapperStyle={{
-                    paddingTop: "20px"
-                  }}
-                />
-                <Bar 
-                  dataKey="PREDICTIONS" 
-                  fill="#006d77" 
-                />
-                <Bar 
-                  dataKey="REELS" 
-                  fill="#9b2226" 
-                />
-              </BarChart>
-            ) : (
+        {showDetails ? (
+          <div className="space-y-4">
+            <div className="relative w-full">
+              <Input
+                placeholder="Rechercher par contrepartie ou libellé..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Année</TableHead>
+                    <TableHead>Contrepartie</TableHead>
+                    <TableHead>Libellé</TableHead>
+                    <TableHead className="text-right">Réel</TableHead>
+                    <TableHead className="text-right">Budget/Prévision</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((item, index) => (
+                    <TableRow key={`${item.year}-${item.contrepartie}-${index}`}>
+                      <TableCell>{item.year}</TableCell>
+                      <TableCell>{item.contrepartie}</TableCell>
+                      <TableCell>{item.libLong}</TableCell>
+                      <TableCell className="text-right">
+                        {item.actualValue ? formatEuro(item.actualValue) : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {item.predictedValue ? formatEuro(item.predictedValue) : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ) : (
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart 
                 data={filteredData}
                 margin={{
@@ -181,9 +151,9 @@ export function PredictionChart({ predictions, axe, showDetails = false }: Predi
                   dot={false}
                 />
               </LineChart>
-            )}
-          </ResponsiveContainer>
-        </div>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
