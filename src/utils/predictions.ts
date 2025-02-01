@@ -12,78 +12,59 @@ export async function generatePredictions(
   historicalData: Array<any>,
   yearsToPredict: number = 10
 ): Promise<PredictionData[]> {
-  console.log("Début de la génération des prédictions avec les données brutes:", historicalData);
+  console.log("Données brutes reçues:", historicalData);
 
-  // Filtrer et transformer les données valides
+  // Identifier les colonnes qui contiennent les années (ANNEE_XXXX)
+  const yearColumns = Object.keys(historicalData[0] || {}).filter(key => 
+    key.startsWith('ANNEE_') && !isNaN(parseInt(key.split('_')[1]))
+  );
+
+  console.log("Colonnes d'années trouvées:", yearColumns);
+
+  // Transformer les données en format utilisable
   const validData = historicalData
-    .filter(entry => {
-      const hasRequiredFields = 
-        entry.Fournisseur && 
-        entry.Axe && 
-        entry.Annee && 
-        entry.Montant !== undefined && 
-        entry.Montant !== null;
-      
-      if (!hasRequiredFields) {
-        console.log("Ligne ignorée car données manquantes:", entry);
-      }
-      return hasRequiredFields;
-    })
-    .map(entry => ({
-      fournisseur: String(entry.Fournisseur),
-      axe: String(entry.Axe),
-      year: typeof entry.Annee === 'string' ? parseInt(entry.Annee) : entry.Annee,
-      value: typeof entry.Montant === 'string' ? parseFloat(entry.Montant.replace(/[^\d.-]/g, '')) : entry.Montant
-    }))
-    .filter(entry => !isNaN(entry.year) && !isNaN(entry.value));
+    .filter(entry => entry.Axe_IT && yearColumns.some(col => entry[col] !== undefined))
+    .map(entry => {
+      const dataPoints = yearColumns.map(col => ({
+        year: parseInt(col.split('_')[1]),
+        value: typeof entry[col] === 'string' 
+          ? parseFloat(entry[col].replace(/[^\d.-]/g, ''))
+          : entry[col]
+      })).filter(point => !isNaN(point.value));
 
-  console.log("Données valides après filtrage:", validData);
+      return {
+        fournisseur: entry.Axe_IT,
+        axe: entry.Groupe2 || 'Default',
+        dataPoints
+      };
+    })
+    .filter(entry => entry.dataPoints.length > 0);
+
+  console.log("Données transformées:", validData);
 
   if (validData.length === 0) {
     throw new Error("Aucune donnée valide trouvée pour générer les prédictions");
   }
 
-  // Grouper les données par fournisseur et axe
-  const groupedData = new Map<string, Array<{ year: number; value: number }>>();
-  
-  validData.forEach(entry => {
-    const key = `${entry.fournisseur}-${entry.axe}`;
-    if (!groupedData.has(key)) {
-      groupedData.set(key, []);
-    }
-    groupedData.get(key)?.push({
-      year: entry.year,
-      value: entry.value
-    });
-  });
-
   const allPredictions: PredictionData[] = [];
 
-  // Pour chaque groupe, générer des prédictions
-  for (const [key, data] of groupedData.entries()) {
-    const [fournisseur, axe] = key.split('-');
-    
-    if (data.length < 2) {
-      console.log(`Données insuffisantes pour ${fournisseur}-${axe}. Au moins 2 points sont nécessaires.`);
+  // Pour chaque entrée, générer des prédictions
+  for (const entry of validData) {
+    if (entry.dataPoints.length < 2) {
+      console.log(`Données insuffisantes pour ${entry.fournisseur}-${entry.axe}`);
       continue;
     }
 
-    // Trier les données par année
-    data.sort((a, b) => a.year - b.year);
-    
     try {
       // Préparer les données pour le modèle
-      const values = data.map(d => d.value);
-      const years = data.map(d => d.year);
-      
-      // Calculer la moyenne et l'écart-type
-      const mean = tf.mean(values);
-      const squaredDiffs = tf.sub(values, mean).square();
-      const variance = tf.mean(squaredDiffs);
-      const standardDeviation = tf.sqrt(variance);
+      const values = entry.dataPoints.map(d => d.value);
+      const years = entry.dataPoints.map(d => d.year);
 
       // Normaliser les données
-      const normalizedValues = tf.sub(values, mean).div(standardDeviation);
+      const mean = tf.mean(values);
+      const std = tf.moments(values).variance.sqrt();
+
+      const normalizedValues = tf.sub(values, mean).div(std);
 
       // Créer et entraîner le modèle
       const model = tf.sequential();
@@ -94,8 +75,7 @@ export async function generatePredictions(
         loss: 'meanSquaredError'
       });
 
-      // Entraîner le modèle
-      const xs = tf.linspace(0, data.length - 1, data.length);
+      const xs = tf.linspace(0, entry.dataPoints.length - 1, entry.dataPoints.length);
       await model.fit(xs.reshape([-1, 1]), normalizedValues, {
         epochs: 100,
         verbose: 0
@@ -106,41 +86,42 @@ export async function generatePredictions(
       for (let i = 1; i <= yearsToPredict; i++) {
         const yearToPredict = lastYear + i;
         const normalizedPrediction = model.predict(
-          tf.tensor2d([data.length + i - 1], [1, 1])
+          tf.tensor2d([entry.dataPoints.length + i - 1], [1, 1])
         ) as tf.Tensor;
         
         const prediction = normalizedPrediction
-          .mul(standardDeviation)
+          .mul(std)
           .add(mean)
           .dataSync()[0];
 
         allPredictions.push({
           year: yearToPredict,
           predictedValue: Math.max(0, prediction),
-          fournisseur,
-          axe
+          fournisseur: entry.fournisseur,
+          axe: entry.axe
         });
       }
 
       // Ajouter les données historiques
-      data.forEach(d => {
+      entry.dataPoints.forEach(d => {
         allPredictions.push({
           year: d.year,
           actualValue: d.value,
           predictedValue: d.value,
-          fournisseur,
-          axe
+          fournisseur: entry.fournisseur,
+          axe: entry.axe
         });
       });
 
       // Nettoyer les tenseurs
       model.dispose();
       mean.dispose();
-      standardDeviation.dispose();
+      std.dispose();
       normalizedValues.dispose();
       xs.dispose();
+
     } catch (error) {
-      console.error(`Erreur lors de la génération des prédictions pour ${fournisseur}-${axe}:`, error);
+      console.error(`Erreur lors de la génération des prédictions pour ${entry.fournisseur}-${entry.axe}:`, error);
     }
   }
 
