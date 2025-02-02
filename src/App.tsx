@@ -14,10 +14,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <TooltipProvider>
-        <div className="flex min-h-screen bg-gradient-custom">
+        <div className="flex min-h-screen bg-background">
           <Sidebar />
-          <main className="flex-1 ml-64 p-8 transition-all duration-300 ease-in-out">
-            <div className="max-w-7xl mx-auto space-y-8">
+          <main className="flex-1 ml-64 p-8">
+            <div className="max-w-7xl mx-auto">
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/predictions" element={<Predictions />} />

@@ -12,12 +12,10 @@ const Sidebar = () => {
   const location = useLocation();
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 glass-card border-r border-white/20">
+    <div className="fixed left-0 top-0 h-full w-64 glass-card border-r border-white/10">
       <div className="flex flex-col h-full">
         <div className="p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Budget IT
-          </h2>
+          <h2 className="text-2xl font-bold text-primary">Budget IT</h2>
         </div>
         
         <nav className="flex-1 px-4">
@@ -33,7 +31,7 @@ const Sidebar = () => {
                     className={cn(
                       "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                       "hover:bg-white/10",
-                      isActive ? "bg-white/10 text-primary" : "text-secondary"
+                      isActive ? "bg-white/10" : "text-secondary"
                     )}
                   >
                     <Icon className="h-5 w-5" />
