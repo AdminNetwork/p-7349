@@ -37,9 +37,25 @@
 }
 
 .glass-card {
-  @apply bg-white bg-opacity-50 backdrop-blur-lg border border-white border-opacity-20 shadow-lg;
+  @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-lg rounded-xl;
 }
 
 .hover-scale {
   @apply transition-transform duration-200 hover:scale-105;
+}
+
+.card {
+  @apply glass-card p-6 hover:shadow-xl transition-all duration-300;
+}
+
+.button-primary {
+  @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors;
+}
+
+.button-secondary {
+  @apply bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors;
+}
+
+.input-styled {
+  @apply glass-card px-4 py-2 focus:ring-2 focus:ring-primary/50 outline-none;
 }
