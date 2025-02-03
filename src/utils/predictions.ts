@@ -13,15 +13,21 @@ export async function generatePredictions(
   const currentYear = new Date().getFullYear();
   const maxPredictionYear = 2030;
 
-  // Traiter les totaux et les détails
-  for (const entry of historicalData) {
-    const isTotal = entry.Axe_IT?.startsWith('Total ');
-    const axeName = isTotal ? entry.Axe_IT.replace('Total ', '') : entry.Axe_IT;
+  // Filter to only keep "Total" rows
+  const totalRows = historicalData.filter(entry => 
+    entry.Axe_IT?.toLowerCase().startsWith('total ')
+  );
+
+  console.log("Rows with Total:", totalRows);
+
+  // Process each total row
+  for (const entry of totalRows) {
+    const axeName = entry.Axe_IT.replace('Total ', '');
     
-    // Extraire les données historiques et budgétées
+    // Extract historical and budgeted data
     const dataPoints = [];
     
-    // Années historiques (2021-2024)
+    // Historical years (2021-2024)
     for (let year = 2021; year <= 2024; year++) {
       const realKey = `ANNEE_${year}`;
       if (entry[realKey] !== undefined && entry[realKey] !== null && entry[realKey] !== '') {
@@ -38,7 +44,7 @@ export async function generatePredictions(
       }
     }
 
-    // Budget et atterrissage 2024
+    // Budget and landing 2024
     if (entry['BUDGET_2024'] !== undefined && entry['BUDGET_2024'] !== null) {
       const budget2024 = typeof entry['BUDGET_2024'] === 'string' ? 
         parseFloat(entry['BUDGET_2024'].replace(/[^\d.-]/g, '')) : 
@@ -91,17 +97,17 @@ export async function generatePredictions(
     if (dataPoints.length < 2) continue;
 
     try {
-      // Filtrer les points pour l'entraînement (exclure les années avec budget)
+      // Filter points for training (exclude years with budget)
       const trainingPoints = dataPoints.filter(point => !point.hasBudget);
       
-      // Générer les prédictions pour toutes les années futures
+      // Generate predictions for all future years up to 2030
       const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, maxPredictionYear - currentYear);
       
       predictions.forEach(pred => {
         allPredictions.push({
           ...pred,
           axe: axeName,
-          isTotal,
+          isTotal: true,
           contrepartie: entry.CONTRE_PARTIE,
           libLong: entry.Contrepartie_et_lib_long
         });
@@ -122,12 +128,12 @@ async function generatePredictionsForDataset(
   const values = trainingPoints.map(d => d.predictedValue);
   const years = trainingPoints.map(d => d.year);
 
-  // Normaliser les données
+  // Normalize data
   const mean = tf.mean(values);
   const std = tf.moments(values).variance.sqrt();
   const normalizedValues = tf.sub(values, mean).div(std);
 
-  // Créer et entraîner le modèle
+  // Create and train model
   const model = tf.sequential();
   model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
   
@@ -144,18 +150,18 @@ async function generatePredictionsForDataset(
 
   const predictions: DetailedPredictionData[] = [];
 
-  // Ajouter toutes les données historiques et budgétées
+  // Add all historical and budgeted data
   allDataPoints.forEach(d => {
     predictions.push({
       year: d.year,
       actualValue: d.actualValue || undefined,
       predictedValue: d.predictedValue,
-      axe: '', // sera rempli par la fonction appelante
-      isTotal: false // sera rempli par la fonction appelante
+      axe: '', // will be filled by calling function
+      isTotal: false // will be filled by calling function
     });
   });
 
-  // Générer les prédictions pour les années futures sans données
+  // Generate predictions for future years up to 2030
   const lastYear = Math.max(...allDataPoints.map(d => d.year));
   const lastDataPoint = allDataPoints.find(d => d.year === lastYear);
   
@@ -174,14 +180,14 @@ async function generatePredictionsForDataset(
         predictions.push({
           year: lastYear + i,
           predictedValue: Math.max(0, prediction),
-          axe: '', // sera rempli par la fonction appelante
-          isTotal: false // sera rempli par la fonction appelante
+          axe: '', // will be filled by calling function
+          isTotal: false // will be filled by calling function
         });
       }
     }
   }
 
-  // Nettoyer les tenseurs
+  // Clean up tensors
   model.dispose();
   mean.dispose();
   std.dispose();
