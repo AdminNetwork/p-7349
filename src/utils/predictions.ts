@@ -11,55 +11,79 @@ export async function generatePredictions(
 
   const allPredictions: DetailedPredictionData[] = [];
   const currentYear = new Date().getFullYear();
-  const maxPredictionYear = 2030; // Forcer la prédiction jusqu'à 2030
+  const maxPredictionYear = 2030;
 
   // Traiter les totaux et les détails
   for (const entry of historicalData) {
     const isTotal = entry.Axe_IT?.startsWith('Total ');
     const axeName = isTotal ? entry.Axe_IT.replace('Total ', '') : entry.Axe_IT;
     
-    // Extraire les données historiques
+    // Extraire les données historiques et budgétées
     const dataPoints = [];
     
-    // Parcourir toutes les années possibles
-    for (let year = 2020; year <= maxPredictionYear; year++) {
+    // Années historiques (2021-2024)
+    for (let year = 2021; year <= 2024; year++) {
       const realKey = `ANNEE_${year}`;
-      const budgetKey = `BUDGET_${year}`;
-      const atterissageKey = `ATTERISSAGE_${year}`;
-      const planKey = `PLAN_${year}`;
-      
-      let actualValue = null;
-      let predictedValue = null;
-      let hasBudget = false;
-      
-      // Pour les valeurs réelles
       if (entry[realKey] !== undefined && entry[realKey] !== null && entry[realKey] !== '') {
-        actualValue = typeof entry[realKey] === 'string' ? parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : entry[realKey];
-      }
-      
-      // Vérifier dans l'ordre : budget, atterrissage, plan
-      if (entry[budgetKey] !== undefined && entry[budgetKey] !== null && entry[budgetKey] !== '') {
-        predictedValue = typeof entry[budgetKey] === 'string' ? parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : entry[budgetKey];
-        hasBudget = true;
-      } 
-      else if (entry[atterissageKey] !== undefined && entry[atterissageKey] !== null && entry[atterissageKey] !== '') {
-        predictedValue = typeof entry[atterissageKey] === 'string' ? parseFloat(entry[atterissageKey].replace(/[^\d.-]/g, '')) : entry[atterissageKey];
-        hasBudget = true;
-      }
-      else if (entry[planKey] !== undefined && entry[planKey] !== null && entry[planKey] !== '') {
-        predictedValue = typeof entry[planKey] === 'string' ? parseFloat(entry[planKey].replace(/[^\d.-]/g, '')) : entry[planKey];
-        hasBudget = true;
-      }
-      
-      // Si nous avons une valeur réelle ou une prévision
-      if (actualValue !== null || predictedValue !== null) {
+        const value = typeof entry[realKey] === 'string' ? 
+          parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : 
+          entry[realKey];
+        
         dataPoints.push({
           year,
-          actualValue,
-          predictedValue: hasBudget ? predictedValue : actualValue,
-          hasBudget
+          actualValue: value,
+          predictedValue: value,
+          hasBudget: false
         });
       }
+    }
+
+    // Budget et atterrissage 2024
+    if (entry['BUDGET_2024'] !== undefined && entry['BUDGET_2024'] !== null) {
+      const budget2024 = typeof entry['BUDGET_2024'] === 'string' ? 
+        parseFloat(entry['BUDGET_2024'].replace(/[^\d.-]/g, '')) : 
+        entry['BUDGET_2024'];
+
+      const atterrissage2024 = entry['ATTERISSAGE_2024'] !== undefined ? 
+        (typeof entry['ATTERISSAGE_2024'] === 'string' ? 
+          parseFloat(entry['ATTERISSAGE_2024'].replace(/[^\d.-]/g, '')) : 
+          entry['ATTERISSAGE_2024']) : 
+        budget2024;
+
+      dataPoints.push({
+        year: 2024,
+        actualValue: null,
+        predictedValue: atterrissage2024,
+        hasBudget: true
+      });
+    }
+
+    // Budget 2025
+    if (entry['BUDGET_2025'] !== undefined && entry['BUDGET_2025'] !== null) {
+      const budget2025 = typeof entry['BUDGET_2025'] === 'string' ? 
+        parseFloat(entry['BUDGET_2025'].replace(/[^\d.-]/g, '')) : 
+        entry['BUDGET_2025'];
+
+      dataPoints.push({
+        year: 2025,
+        actualValue: null,
+        predictedValue: budget2025,
+        hasBudget: true
+      });
+    }
+
+    // Plan 2026
+    if (entry['PLAN_2026'] !== undefined && entry['PLAN_2026'] !== null) {
+      const plan2026 = typeof entry['PLAN_2026'] === 'string' ? 
+        parseFloat(entry['PLAN_2026'].replace(/[^\d.-]/g, '')) : 
+        entry['PLAN_2026'];
+
+      dataPoints.push({
+        year: 2026,
+        actualValue: null,
+        predictedValue: plan2026,
+        hasBudget: true
+      });
     }
 
     console.log(`Données historiques pour ${axeName}:`, dataPoints);
@@ -78,8 +102,8 @@ export async function generatePredictions(
           ...pred,
           axe: axeName,
           isTotal,
-          contrepartie: entry.Contrepartie,
-          libLong: entry.Lib_Long
+          contrepartie: entry.CONTRE_PARTIE,
+          libLong: entry.Contrepartie_et_lib_long
         });
       });
     } catch (error) {
@@ -146,7 +170,7 @@ async function generatePredictionsForDataset(
         .add(mean)
         .dataSync()[0];
 
-      if (lastYear + i <= 2030) { // Forcer la prédiction jusqu'à 2030
+      if (lastYear + i <= 2030) {
         predictions.push({
           year: lastYear + i,
           predictedValue: Math.max(0, prediction),
