@@ -3,6 +3,42 @@ import type { BudgetData, DetailedPredictionData } from '@/types/budget';
 
 export type { DetailedPredictionData as PredictionData };
 
+function getYearFromColumnName(columnName: string): number | null {
+  const match = columnName.match(/(?:ANNEE|BUDGET|PLAN)_(\d{4})/);
+  return match ? parseInt(match[1]) : null;
+}
+
+function extractAvailableYears(data: BudgetData): {
+  actualYears: number[];
+  budgetYears: number[];
+  planYears: number[];
+} {
+  const years = {
+    actualYears: [],
+    budgetYears: [],
+    planYears: []
+  };
+
+  Object.keys(data).forEach(key => {
+    const year = getYearFromColumnName(key);
+    if (!year) return;
+
+    if (key.startsWith('ANNEE_')) {
+      years.actualYears.push(year);
+    } else if (key.startsWith('BUDGET_')) {
+      years.budgetYears.push(year);
+    } else if (key.startsWith('PLAN_')) {
+      years.planYears.push(year);
+    }
+  });
+
+  return {
+    actualYears: [...new Set(years.actualYears)].sort(),
+    budgetYears: [...new Set(years.budgetYears)].sort(),
+    planYears: [...new Set(years.planYears)].sort()
+  };
+}
+
 export async function generatePredictions(
   historicalData: BudgetData[],
   yearsToPredict: number = 10
@@ -16,7 +52,7 @@ export async function generatePredictions(
 
   const allPredictions: DetailedPredictionData[] = [];
   const currentYear = new Date().getFullYear();
-  const maxPredictionYear = 2030;
+  const maxPredictionYear = currentYear + yearsToPredict;
 
   // Filter to only keep "Total" rows
   const totalRows = historicalData.filter(entry => 
@@ -36,11 +72,13 @@ export async function generatePredictions(
     const axeName = entry.Axe_IT.replace(/total /i, '');
     console.log(`Traitement de l'axe: ${axeName}`);
     
-    // Extract historical and budgeted data
+    const { actualYears, budgetYears, planYears } = extractAvailableYears(entry);
+    console.log(`Années disponibles pour ${axeName}:`, { actualYears, budgetYears, planYears });
+
     const dataPoints = [];
-    
-    // Historical years (2021-2024)
-    for (let year = 2021; year <= 2024; year++) {
+
+    // Process actual values
+    actualYears.forEach(year => {
       const realKey = `ANNEE_${year}`;
       if (entry[realKey] !== undefined && entry[realKey] !== null && entry[realKey] !== '') {
         const value = typeof entry[realKey] === 'string' ? 
@@ -56,63 +94,55 @@ export async function generatePredictions(
           });
         }
       }
-    }
+    });
 
-    console.log(`Points de données historiques pour ${axeName}:`, dataPoints);
+    // Process budget values
+    budgetYears.forEach(year => {
+      const budgetKey = `BUDGET_${year}`;
+      if (entry[budgetKey] !== undefined && entry[budgetKey] !== null) {
+        const budgetValue = typeof entry[budgetKey] === 'string' ? 
+          parseFloat(entry[budgetKey].replace(/[^\d.-]/g, '')) : 
+          entry[budgetKey];
 
-    // Budget and landing 2024
-    if (entry['BUDGET_2024'] !== undefined && entry['BUDGET_2024'] !== null) {
-      const budget2024 = typeof entry['BUDGET_2024'] === 'string' ? 
-        parseFloat(entry['BUDGET_2024'].replace(/[^\d.-]/g, '')) : 
-        entry['BUDGET_2024'];
+        if (!isNaN(budgetValue)) {
+          // Check if we have an "atterrissage" value for this year
+          const atterrissageKey = `ATTERISSAGE_${year}`;
+          const finalValue = entry[atterrissageKey] !== undefined ? 
+            (typeof entry[atterrissageKey] === 'string' ? 
+              parseFloat(entry[atterrissageKey].replace(/[^\d.-]/g, '')) : 
+              entry[atterrissageKey]) : 
+            budgetValue;
 
-      const atterrissage2024 = entry['ATTERISSAGE_2024'] !== undefined ? 
-        (typeof entry['ATTERISSAGE_2024'] === 'string' ? 
-          parseFloat(entry['ATTERISSAGE_2024'].replace(/[^\d.-]/g, '')) : 
-          entry['ATTERISSAGE_2024']) : 
-        budget2024;
-
-      if (!isNaN(atterrissage2024)) {
-        dataPoints.push({
-          year: 2024,
-          actualValue: null,
-          predictedValue: atterrissage2024,
-          hasBudget: true
-        });
+          if (!isNaN(finalValue)) {
+            dataPoints.push({
+              year,
+              actualValue: null,
+              predictedValue: finalValue,
+              hasBudget: true
+            });
+          }
+        }
       }
-    }
+    });
 
-    // Budget 2025
-    if (entry['BUDGET_2025'] !== undefined && entry['BUDGET_2025'] !== null) {
-      const budget2025 = typeof entry['BUDGET_2025'] === 'string' ? 
-        parseFloat(entry['BUDGET_2025'].replace(/[^\d.-]/g, '')) : 
-        entry['BUDGET_2025'];
+    // Process plan values
+    planYears.forEach(year => {
+      const planKey = `PLAN_${year}`;
+      if (entry[planKey] !== undefined && entry[planKey] !== null) {
+        const planValue = typeof entry[planKey] === 'string' ? 
+          parseFloat(entry[planKey].replace(/[^\d.-]/g, '')) : 
+          entry[planKey];
 
-      if (!isNaN(budget2025)) {
-        dataPoints.push({
-          year: 2025,
-          actualValue: null,
-          predictedValue: budget2025,
-          hasBudget: true
-        });
+        if (!isNaN(planValue)) {
+          dataPoints.push({
+            year,
+            actualValue: null,
+            predictedValue: planValue,
+            hasBudget: true
+          });
+        }
       }
-    }
-
-    // Plan 2026
-    if (entry['PLAN_2026'] !== undefined && entry['PLAN_2026'] !== null) {
-      const plan2026 = typeof entry['PLAN_2026'] === 'string' ? 
-        parseFloat(entry['PLAN_2026'].replace(/[^\d.-]/g, '')) : 
-        entry['PLAN_2026'];
-
-      if (!isNaN(plan2026)) {
-        dataPoints.push({
-          year: 2026,
-          actualValue: null,
-          predictedValue: plan2026,
-          hasBudget: true
-        });
-      }
-    }
+    });
 
     console.log(`Points de données complets pour ${axeName}:`, dataPoints);
 
@@ -126,7 +156,7 @@ export async function generatePredictions(
       const trainingPoints = dataPoints.filter(point => !point.hasBudget);
       console.log(`Points d'entraînement pour ${axeName}:`, trainingPoints);
       
-      // Generate predictions for all future years up to 2030
+      // Generate predictions for remaining years up to maxPredictionYear
       const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, maxPredictionYear - currentYear);
       console.log(`Prédictions générées pour ${axeName}:`, predictions);
       
