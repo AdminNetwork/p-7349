@@ -9,20 +9,32 @@ export async function generatePredictions(
 ): Promise<DetailedPredictionData[]> {
   console.log("Début de la génération des prédictions avec les données:", historicalData);
 
+  if (!historicalData || historicalData.length === 0) {
+    console.error("Aucune donnée historique fournie");
+    return [];
+  }
+
   const allPredictions: DetailedPredictionData[] = [];
   const currentYear = new Date().getFullYear();
   const maxPredictionYear = 2030;
 
   // Filter to only keep "Total" rows
   const totalRows = historicalData.filter(entry => 
-    entry.Axe_IT?.toLowerCase().startsWith('total ')
+    entry.Axe_IT?.toLowerCase().includes('total ')
   );
 
-  console.log("Rows with Total:", totalRows);
+  console.log("Nombre de lignes Total trouvées:", totalRows.length);
+  console.log("Lignes Total:", totalRows);
+
+  if (totalRows.length === 0) {
+    console.error("Aucune ligne 'Total' trouvée dans les données");
+    return [];
+  }
 
   // Process each total row
   for (const entry of totalRows) {
-    const axeName = entry.Axe_IT.replace('Total ', '');
+    const axeName = entry.Axe_IT.replace(/total /i, '');
+    console.log(`Traitement de l'axe: ${axeName}`);
     
     // Extract historical and budgeted data
     const dataPoints = [];
@@ -35,14 +47,18 @@ export async function generatePredictions(
           parseFloat(entry[realKey].replace(/[^\d.-]/g, '')) : 
           entry[realKey];
         
-        dataPoints.push({
-          year,
-          actualValue: value,
-          predictedValue: value,
-          hasBudget: false
-        });
+        if (!isNaN(value)) {
+          dataPoints.push({
+            year,
+            actualValue: value,
+            predictedValue: value,
+            hasBudget: false
+          });
+        }
       }
     }
+
+    console.log(`Points de données historiques pour ${axeName}:`, dataPoints);
 
     // Budget and landing 2024
     if (entry['BUDGET_2024'] !== undefined && entry['BUDGET_2024'] !== null) {
@@ -56,12 +72,14 @@ export async function generatePredictions(
           entry['ATTERISSAGE_2024']) : 
         budget2024;
 
-      dataPoints.push({
-        year: 2024,
-        actualValue: null,
-        predictedValue: atterrissage2024,
-        hasBudget: true
-      });
+      if (!isNaN(atterrissage2024)) {
+        dataPoints.push({
+          year: 2024,
+          actualValue: null,
+          predictedValue: atterrissage2024,
+          hasBudget: true
+        });
+      }
     }
 
     // Budget 2025
@@ -70,12 +88,14 @@ export async function generatePredictions(
         parseFloat(entry['BUDGET_2025'].replace(/[^\d.-]/g, '')) : 
         entry['BUDGET_2025'];
 
-      dataPoints.push({
-        year: 2025,
-        actualValue: null,
-        predictedValue: budget2025,
-        hasBudget: true
-      });
+      if (!isNaN(budget2025)) {
+        dataPoints.push({
+          year: 2025,
+          actualValue: null,
+          predictedValue: budget2025,
+          hasBudget: true
+        });
+      }
     }
 
     // Plan 2026
@@ -84,24 +104,31 @@ export async function generatePredictions(
         parseFloat(entry['PLAN_2026'].replace(/[^\d.-]/g, '')) : 
         entry['PLAN_2026'];
 
-      dataPoints.push({
-        year: 2026,
-        actualValue: null,
-        predictedValue: plan2026,
-        hasBudget: true
-      });
+      if (!isNaN(plan2026)) {
+        dataPoints.push({
+          year: 2026,
+          actualValue: null,
+          predictedValue: plan2026,
+          hasBudget: true
+        });
+      }
     }
 
-    console.log(`Données historiques pour ${axeName}:`, dataPoints);
+    console.log(`Points de données complets pour ${axeName}:`, dataPoints);
 
-    if (dataPoints.length < 2) continue;
+    if (dataPoints.length < 2) {
+      console.log(`Pas assez de points de données pour ${axeName}, minimum 2 requis`);
+      continue;
+    }
 
     try {
       // Filter points for training (exclude years with budget)
       const trainingPoints = dataPoints.filter(point => !point.hasBudget);
+      console.log(`Points d'entraînement pour ${axeName}:`, trainingPoints);
       
       // Generate predictions for all future years up to 2030
       const predictions = await generatePredictionsForDataset(trainingPoints, dataPoints, maxPredictionYear - currentYear);
+      console.log(`Prédictions générées pour ${axeName}:`, predictions);
       
       predictions.forEach(pred => {
         allPredictions.push({
@@ -117,6 +144,7 @@ export async function generatePredictions(
     }
   }
 
+  console.log("Toutes les prédictions générées:", allPredictions);
   return allPredictions;
 }
 
