@@ -37,25 +37,24 @@ const formSchema = z.object({
   montantReel: z.number().optional(),
   budget: z.number().optional(),
   atterissage: z.number().optional(),
-  plan: z.number().optional().refine(
-    (val, ctx) => {
-      if (val && ctx.parent.annee <= currentYear) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Le plan ne peut être défini que pour les années futures",
+  plan: z.number().optional().superRefine((val, ctx) => {
+    if (val !== undefined && ctx.parent.annee <= currentYear) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le plan ne peut être défini que pour les années futures",
+      });
     }
-  ),
+  }),
 });
+
+type FormSchema = z.infer<typeof formSchema>;
 
 export default function Interface() {
   const { toast } = useToast();
   const [entries, setEntries] = useState<FinancialFormData[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       axeIT: "",
@@ -74,18 +73,18 @@ export default function Interface() {
     ecartBudgetAtterrissage: (formValues.budget || 0) - (formValues.atterissage || 0),
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: FormSchema) => {
     if (editingId !== null) {
-      setEntries(entries.map((entry, index) => 
-        index === editingId ? values : entry
-      ));
+      const updatedEntries = [...entries];
+      updatedEntries[editingId] = values as FinancialFormData;
+      setEntries(updatedEntries);
       setEditingId(null);
       toast({
         title: "Entrée modifiée",
         description: "Les données ont été mises à jour avec succès",
       });
     } else {
-      setEntries([...entries, values]);
+      setEntries([...entries, values as FinancialFormData]);
       toast({
         title: "Entrée ajoutée",
         description: "Les nouvelles données ont été enregistrées",
@@ -97,13 +96,14 @@ export default function Interface() {
   const handleEdit = (index: number) => {
     const entry = entries[index];
     Object.keys(entry).forEach((key) => {
-      setValue(key as keyof FinancialFormData, entry[key as keyof FinancialFormData]);
+      setValue(key as keyof FormSchema, entry[key as keyof FormSchema]);
     });
     setEditingId(index);
   };
 
   const handleDelete = (index: number) => {
-    setEntries(entries.filter((_, i) => i !== index));
+    const updatedEntries = entries.filter((_, i) => i !== index);
+    setEntries(updatedEntries);
     toast({
       title: "Entrée supprimée",
       description: "Les données ont été supprimées avec succès",
