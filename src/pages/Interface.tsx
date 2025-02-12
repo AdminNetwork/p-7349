@@ -38,7 +38,8 @@ const formSchema = z.object({
   budget: z.number().optional(),
   atterissage: z.number().optional(),
   plan: z.number().optional().superRefine((val, ctx) => {
-    if (val !== undefined && ctx.parent.annee <= currentYear) {
+    const data = ctx.getData();
+    if (val !== undefined && data.annee <= currentYear) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Le plan ne peut être défini que pour les années futures",
