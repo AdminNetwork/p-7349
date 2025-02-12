@@ -26,6 +26,20 @@ import type { FinancialFormData } from "@/types/budget";
 
 const currentYear = new Date().getFullYear();
 const yearRange = Array.from({ length: 10 }, (_, i) => currentYear + i);
+const months = [
+  { value: 1, label: "Janvier" },
+  { value: 2, label: "Février" },
+  { value: 3, label: "Mars" },
+  { value: 4, label: "Avril" },
+  { value: 5, label: "Mai" },
+  { value: 6, label: "Juin" },
+  { value: 7, label: "Juillet" },
+  { value: 8, label: "Août" },
+  { value: 9, label: "Septembre" },
+  { value: 10, label: "Octobre" },
+  { value: 11, label: "Novembre" },
+  { value: 12, label: "Décembre" },
+];
 
 const formSchema = z.object({
   axeIT: z.string().min(1, "L'Axe IT est requis"),
@@ -33,6 +47,7 @@ const formSchema = z.object({
   contrePartie: z.string().min(1, "La Contre-partie est requise"),
   libContrePartie: z.string().min(1, "Le libellé de contre-partie est requis"),
   annee: z.number().min(currentYear, "L'année doit être supérieure ou égale à l'année en cours"),
+  mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),
   atterissage: z.number().optional(),
@@ -54,13 +69,13 @@ export default function Interface() {
       contrePartie: "",
       libContrePartie: "",
       annee: currentYear,
+      mois: new Date().getMonth() + 1,
     },
   });
 
   const { watch, setValue } = form;
   const formValues = watch();
 
-  // Validation supplémentaire pour le champ plan
   const validatePlan = (value: number | undefined) => {
     if (value !== undefined && formValues.annee <= currentYear) {
       return "Le plan ne peut être défini que pour les années futures";
@@ -71,10 +86,11 @@ export default function Interface() {
   const calculatedFields = {
     ecartBudgetReel: (formValues.budget || 0) - (formValues.montantReel || 0),
     ecartBudgetAtterrissage: (formValues.budget || 0) - (formValues.atterissage || 0),
+    budgetYTD: formValues.budget ? (formValues.budget / 12) * formValues.mois : 0,
+    budgetVsReelYTD: (formValues.budget ? (formValues.budget / 12) * formValues.mois : 0) - (formValues.montantReel || 0),
   };
 
   const onSubmit = (values: FormSchema) => {
-    // Validation supplémentaire du plan avant la soumission
     const planValidation = validatePlan(values.plan);
     if (planValidation !== true) {
       form.setError('plan', { message: planValidation });
@@ -210,6 +226,38 @@ export default function Interface() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="mois"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mois</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Sélectionnez un mois" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white">
+                          {months.map((month) => (
+                            <SelectItem 
+                              key={month.value} 
+                              value={month.value.toString()}
+                              className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                            >
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -296,6 +344,14 @@ export default function Interface() {
                 <div className="p-4 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-2">Écart Budget vs Atterrissage</p>
                   <p className="text-lg font-bold">{calculatedFields.ecartBudgetAtterrissage.toFixed(2)} €</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">BUDGET YTD</p>
+                  <p className="text-lg font-bold">{calculatedFields.budgetYTD.toFixed(2)} €</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">Budget vs Réel en YTD</p>
+                  <p className="text-lg font-bold">{calculatedFields.budgetVsReelYTD.toFixed(2)} €</p>
                 </div>
               </div>
 

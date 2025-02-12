@@ -24,6 +24,7 @@ export interface FinancialFormData {
   contrePartie: string;
   libContrePartie: string;
   annee: number;
+  mois: number;
   montantReel?: number;
   budget?: number;
   atterissage?: number;
@@ -33,4 +34,7 @@ export interface FinancialFormData {
 export interface CalculatedFields {
   ecartBudgetReel: number;
   ecartBudgetAtterrissage: number;
+  budgetYTD: number;
+  budgetVsReelYTD: number;
 }
+
