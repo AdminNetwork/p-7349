@@ -37,15 +37,7 @@ const formSchema = z.object({
   montantReel: z.number().optional(),
   budget: z.number().optional(),
   atterissage: z.number().optional(),
-  plan: z.number().optional().superRefine((val, ctx) => {
-    const data = ctx.getData();
-    if (val !== undefined && data.annee <= currentYear) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Le plan ne peut être défini que pour les années futures",
-      });
-    }
-  }),
+  plan: z.number().optional()
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -69,12 +61,27 @@ export default function Interface() {
   const { watch, setValue } = form;
   const formValues = watch();
 
+  // Validation supplémentaire pour le champ plan
+  const validatePlan = (value: number | undefined) => {
+    if (value !== undefined && formValues.annee <= currentYear) {
+      return "Le plan ne peut être défini que pour les années futures";
+    }
+    return true;
+  };
+
   const calculatedFields = {
     ecartBudgetReel: (formValues.budget || 0) - (formValues.montantReel || 0),
     ecartBudgetAtterrissage: (formValues.budget || 0) - (formValues.atterissage || 0),
   };
 
   const onSubmit = (values: FormSchema) => {
+    // Validation supplémentaire du plan avant la soumission
+    const planValidation = validatePlan(values.plan);
+    if (planValidation !== true) {
+      form.setError('plan', { message: planValidation });
+      return;
+    }
+
     if (editingId !== null) {
       const updatedEntries = [...entries];
       updatedEntries[editingId] = values as FinancialFormData;
