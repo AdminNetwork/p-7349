@@ -1,3 +1,4 @@
+
 export interface BudgetData {
   Axe_IT: string;
   Annee: string | number;
@@ -15,4 +16,21 @@ export interface DetailedPredictionData {
   isTotal: boolean;
   contrepartie?: string;
   libLong?: string;
+}
+
+export interface FinancialFormData {
+  axeIT: string;
+  groupe2: string;
+  contrePartie: string;
+  libContrePartie: string;
+  annee: number;
+  montantReel?: number;
+  budget?: number;
+  atterissage?: number;
+  plan?: number;
+}
+
+export interface CalculatedFields {
+  ecartBudgetReel: number;
+  ecartBudgetAtterrissage: number;
 }

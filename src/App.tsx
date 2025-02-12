@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import Index from "./pages/Index";
 import Predictions from "./pages/Predictions";
 import PredictionsDetails from "./pages/PredictionsDetails";
+import Interface from "./pages/Interface";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/predictions" element={<Predictions />} />
                 <Route path="/predictions-details" element={<PredictionsDetails />} />
+                <Route path="/interface" element={<Interface />} />
               </Routes>
             </div>
           </main>
