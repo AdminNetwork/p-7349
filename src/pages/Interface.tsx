@@ -61,7 +61,6 @@ export default function Interface() {
   const [entries, setEntries] = useState<FinancialFormData[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Fonction pour charger les données
   const loadEntries = async () => {
     try {
       const response = await fetch('http://localhost/api/crud.php');
@@ -76,7 +75,6 @@ export default function Interface() {
     }
   };
 
-  // Charger les données au montage du composant
   useEffect(() => {
     loadEntries();
   }, []);
@@ -119,7 +117,6 @@ export default function Interface() {
 
     try {
       if (editingId !== null) {
-        // Mise à jour
         await fetch('http://localhost/api/crud.php', {
           method: 'PUT',
           headers: {
@@ -133,7 +130,6 @@ export default function Interface() {
           description: "Les données ont été mises à jour avec succès",
         });
       } else {
-        // Création
         await fetch('http://localhost/api/crud.php', {
           method: 'POST',
           headers: {
@@ -148,7 +144,7 @@ export default function Interface() {
         });
       }
 
-      await loadEntries(); // Recharger les données
+      await loadEntries();
       setEditingId(null);
       form.reset();
     } catch (error) {
@@ -160,12 +156,15 @@ export default function Interface() {
     }
   };
 
-  const handleEdit = (index: number) => {
-    const entry = entries[index];
-    Object.keys(entry).forEach((key) => {
-      setValue(key as keyof FormSchema, entry[key as keyof FormSchema]);
-    });
-    setEditingId(index);
+  const handleEdit = (entry: FinancialFormData) => {
+    if (entry.id) {
+      Object.keys(entry).forEach((key) => {
+        if (key !== 'id') {
+          setValue(key as keyof FormSchema, entry[key as keyof FormSchema]);
+        }
+      });
+      setEditingId(entry.id);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -179,7 +178,7 @@ export default function Interface() {
         description: "Les données ont été supprimées avec succès",
       });
 
-      await loadEntries(); // Recharger les données
+      await loadEntries();
     } catch (error) {
       toast({
         title: "Erreur",
@@ -435,8 +434,8 @@ export default function Interface() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {entries.map((entry, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            {entries.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div>
                   <p className="font-medium">{entry.axeIT}</p>
                   <p className="text-sm text-muted-foreground">
@@ -447,14 +446,14 @@ export default function Interface() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleEdit(index)}
+                    onClick={() => handleEdit(entry)}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="destructive"
                     size="icon"
-                    onClick={() => handleDelete(entry.id)}
+                    onClick={() => entry.id && handleDelete(entry.id)}
                   >
                     <Trash className="w-4 h-4" />
                   </Button>

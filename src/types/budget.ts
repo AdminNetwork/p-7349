@@ -19,6 +19,7 @@ export interface DetailedPredictionData {
 }
 
 export interface FinancialFormData {
+  id?: number;
   axeIT: string;
   groupe2: string;
   contrePartie: string;
