@@ -38,4 +38,3 @@ export interface CalculatedFields {
   budgetYTD: number;
   budgetVsReelYTD: number;
 }
-

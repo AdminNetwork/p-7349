@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -61,6 +62,21 @@ export default function Interface() {
   const [entries, setEntries] = useState<FinancialFormData[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      axeIT: "",
+      groupe2: "",
+      contrePartie: "",
+      libContrePartie: "",
+      annee: currentYear,
+      mois: new Date().getMonth() + 1,
+    },
+  });
+
+  const { watch, setValue } = form;
+  const formValues = watch();
+
   const loadEntries = async () => {
     try {
       const response = await fetch('http://localhost/api/crud.php');
@@ -78,21 +94,6 @@ export default function Interface() {
   useEffect(() => {
     loadEntries();
   }, []);
-
-  const form = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      axeIT: "",
-      groupe2: "",
-      contrePartie: "",
-      libContrePartie: "",
-      annee: currentYear,
-      mois: new Date().getMonth() + 1,
-    },
-  });
-
-  const { watch, setValue } = form;
-  const formValues = watch();
 
   const validatePlan = (value: number | undefined) => {
     if (value !== undefined && formValues.annee <= currentYear) {
