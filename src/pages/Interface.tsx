@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -61,6 +61,26 @@ export default function Interface() {
   const [entries, setEntries] = useState<FinancialFormData[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // Fonction pour charger les données
+  const loadEntries = async () => {
+    try {
+      const response = await fetch('http://localhost/api/crud.php');
+      const data = await response.json();
+      setEntries(data);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadEntries();
+  }, []);
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -90,30 +110,54 @@ export default function Interface() {
     budgetVsReelYTD: (formValues.budget ? (formValues.budget * formValues.mois) / 12 : 0) - (formValues.montantReel || 0),
   };
 
-  const onSubmit = (values: FormSchema) => {
+  const onSubmit = async (values: FormSchema) => {
     const planValidation = validatePlan(values.plan);
     if (planValidation !== true) {
       form.setError('plan', { message: planValidation });
       return;
     }
 
-    if (editingId !== null) {
-      const updatedEntries = [...entries];
-      updatedEntries[editingId] = values as FinancialFormData;
-      setEntries(updatedEntries);
+    try {
+      if (editingId !== null) {
+        // Mise à jour
+        await fetch('http://localhost/api/crud.php', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...values, id: editingId }),
+        });
+
+        toast({
+          title: "Succès",
+          description: "Les données ont été mises à jour avec succès",
+        });
+      } else {
+        // Création
+        await fetch('http://localhost/api/crud.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(values),
+        });
+
+        toast({
+          title: "Succès",
+          description: "Les nouvelles données ont été enregistrées",
+        });
+      }
+
+      await loadEntries(); // Recharger les données
       setEditingId(null);
+      form.reset();
+    } catch (error) {
       toast({
-        title: "Entrée modifiée",
-        description: "Les données ont été mises à jour avec succès",
-      });
-    } else {
-      setEntries([...entries, values as FinancialFormData]);
-      toast({
-        title: "Entrée ajoutée",
-        description: "Les nouvelles données ont été enregistrées",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'opération",
+        variant: "destructive",
       });
     }
-    form.reset();
   };
 
   const handleEdit = (index: number) => {
@@ -124,13 +168,25 @@ export default function Interface() {
     setEditingId(index);
   };
 
-  const handleDelete = (index: number) => {
-    const updatedEntries = entries.filter((_, i) => i !== index);
-    setEntries(updatedEntries);
-    toast({
-      title: "Entrée supprimée",
-      description: "Les données ont été supprimées avec succès",
-    });
+  const handleDelete = async (id: number) => {
+    try {
+      await fetch(`http://localhost/api/crud.php?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      toast({
+        title: "Succès",
+        description: "Les données ont été supprimées avec succès",
+      });
+
+      await loadEntries(); // Recharger les données
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer les données",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -398,7 +454,7 @@ export default function Interface() {
                   <Button
                     variant="destructive"
                     size="icon"
-                    onClick={() => handleDelete(index)}
+                    onClick={() => handleDelete(entry.id)}
                   >
                     <Trash className="w-4 h-4" />
                   </Button>
