@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -191,13 +190,17 @@ export default function Interface() {
                         value={field.value.toString()}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="Sélectionnez une année" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="bg-white">
                           {yearRange.map((year) => (
-                            <SelectItem key={year} value={year.toString()}>
+                            <SelectItem 
+                              key={year} 
+                              value={year.toString()}
+                              className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                            >
                               {year}
                             </SelectItem>
                           ))}
