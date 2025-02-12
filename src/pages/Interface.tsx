@@ -86,8 +86,8 @@ export default function Interface() {
   const calculatedFields = {
     ecartBudgetReel: (formValues.budget || 0) - (formValues.montantReel || 0),
     ecartBudgetAtterrissage: (formValues.budget || 0) - (formValues.atterissage || 0),
-    budgetYTD: formValues.budget ? (formValues.budget / 12) * formValues.mois : 0,
-    budgetVsReelYTD: (formValues.budget ? (formValues.budget / 12) * formValues.mois : 0) - (formValues.montantReel || 0),
+    budgetYTD: formValues.budget ? (formValues.budget * formValues.mois) / 12 : 0,
+    budgetVsReelYTD: (formValues.budget ? (formValues.budget * formValues.mois) / 12 : 0) - (formValues.montantReel || 0),
   };
 
   const onSubmit = (values: FormSchema) => {
