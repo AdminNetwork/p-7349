@@ -2,8 +2,12 @@
 import * as z from "zod";
 
 const currentYear = new Date().getFullYear();
+const startYear = 2000;
 
-export const yearRange = Array.from({ length: 10 }, (_, i) => currentYear + i);
+export const yearRange = Array.from(
+  { length: currentYear - startYear + 10 }, 
+  (_, i) => startYear + i
+);
 
 export const monthsData = [
   { value: 1, label: "Janvier" },
@@ -25,7 +29,7 @@ export const formSchema = z.object({
   groupe2: z.string().min(1, "Le Groupe 2 est requis"),
   contrePartie: z.string().min(1, "La Contre-partie est requise"),
   libContrePartie: z.string().min(1, "Le libellé de contre-partie est requis"),
-  annee: z.number().min(currentYear, "L'année doit être supérieure ou égale à l'année en cours"),
+  annee: z.number().min(startYear, `L'année doit être supérieure ou égale à ${startYear}`),
   mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),
