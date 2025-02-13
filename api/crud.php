@@ -75,6 +75,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             COALESCE(budget_vs_reel_ytd, 0) as budget_vs_reel_ytd
             FROM budget_entries');
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convertir les valeurs numériques des mois en libellés lors de la récupération
+        foreach ($results as &$row) {
+            if (isset($row['mois'])) {
+                $row['mois'] = getMonthLabel($row['mois']);
+            }
+        }
+        
         echo json_encode($results);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -97,6 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mois_numerique = intval($data['mois']);
         // Convertir en libellé pour le stockage en utilisant la fonction getMonthLabel
         $data['mois'] = getMonthLabel($mois_numerique);
+        
+        error_log("Mois converti en libellé: " . $data['mois']);
         
         // Convertir les valeurs numériques potentiellement NULL en 0
         foreach ($data as $key => $value) {
@@ -147,6 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $mois_numerique = intval($data['mois']);
         // Convertir en libellé pour le stockage en utilisant la fonction getMonthLabel
         $data['mois'] = getMonthLabel($mois_numerique);
+        
+        error_log("Mois converti en libellé (PUT): " . $data['mois']);
         
         // Appliquer les mêmes conversions que pour l'insertion
         foreach ($data as $key => $value) {
