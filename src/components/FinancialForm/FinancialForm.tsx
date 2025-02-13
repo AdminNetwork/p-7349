@@ -19,6 +19,7 @@ interface FinancialFormProps {
 }
 
 export function FinancialForm({ onSubmit, editingId }: FinancialFormProps) {
+  const currentDate = new Date();
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -26,8 +27,12 @@ export function FinancialForm({ onSubmit, editingId }: FinancialFormProps) {
       groupe2: "",
       contrePartie: "",
       libContrePartie: "",
-      annee: new Date().getFullYear(),
-      mois: new Date().getMonth() + 1,
+      annee: currentDate.getFullYear(),
+      mois: currentDate.getMonth() + 1,
+      montantReel: undefined,
+      budget: undefined,
+      atterissage: undefined,
+      plan: undefined,
     },
   });
 

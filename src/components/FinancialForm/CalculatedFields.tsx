@@ -4,16 +4,18 @@ interface CalculatedFieldsProps {
     budget?: number;
     montantReel?: number;
     atterissage?: number;
-    mois: number;
+    mois?: number;
   };
 }
 
 export function CalculatedFields({ formValues }: CalculatedFieldsProps) {
+  const mois = formValues.mois || 1; // Valeur par défaut si mois n'est pas défini
+  
   const calculatedFields = {
     ecartBudgetReel: (formValues.budget || 0) - (formValues.montantReel || 0),
     ecartBudgetAtterrissage: (formValues.budget || 0) - (formValues.atterissage || 0),
-    budgetYTD: formValues.budget ? (formValues.budget * formValues.mois) / 12 : 0,
-    budgetVsReelYTD: (formValues.budget ? (formValues.budget * formValues.mois) / 12 : 0) - (formValues.montantReel || 0),
+    budgetYTD: formValues.budget ? (formValues.budget * mois) / 12 : 0,
+    budgetVsReelYTD: (formValues.budget ? (formValues.budget * mois) / 12 : 0) - (formValues.montantReel || 0),
   };
 
   return (
