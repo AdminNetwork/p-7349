@@ -45,11 +45,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(array_merge($data, $calculatedFields));
+        
+        // Debug: afficher les valeurs avant l'insertion
+        error_log("Data avant insertion: " . print_r($data, true));
+        error_log("Champs calculés: " . print_r($calculatedFields, true));
+        
+        $params = array_merge($data, $calculatedFields);
+        $stmt->execute($params);
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
         http_response_code(500);
+        error_log("Erreur SQL: " . $e->getMessage());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
