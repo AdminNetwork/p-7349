@@ -24,19 +24,17 @@ $moisLabels = [
 ];
 
 // Fonction pour calculer les champs
-function calculateFields($data) {
-    // Utiliser la valeur numérique pour les calculs
-    $mois_numerique = array_search($data['mois'], $GLOBALS['moisLabels']) ?: 1;
+function calculateFields($mois_numerique, $data) {
     $budget = isset($data['budget']) && !is_null($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) && !is_null($data['montantReel']) ? floatval($data['montantReel']) : 0;
     $atterissage = isset($data['atterissage']) && !is_null($data['atterissage']) ? floatval($data['atterissage']) : 0;
 
     // Log détaillé des données reçues
     error_log("=== DÉBUT DU CALCUL DES CHAMPS ===");
-    error_log("Type de mois: " . gettype($mois_numerique) . ", Valeur: $mois_numerique");
-    error_log("Type de budget: " . gettype($budget) . ", Valeur: $budget");
-    error_log("Type de montantReel: " . gettype($montantReel) . ", Valeur: $montantReel");
-    error_log("Type de atterissage: " . gettype($atterissage) . ", Valeur: $atterissage");
+    error_log("Mois numérique pour calcul: $mois_numerique");
+    error_log("Budget: $budget");
+    error_log("Montant réel: $montantReel");
+    error_log("Atterrissage: $atterissage");
 
     // Calcul des champs en gardant les valeurs non-nulles
     $calculatedFields = [
@@ -84,10 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = json_decode($rawData, true);
         error_log("Données décodées: " . print_r($data, true));
 
-        // Conversion de la valeur numérique du mois en libellé
-        global $moisLabels;
-        $mois_numerique = $data['mois'];  // Garder la valeur numérique pour les calculs
-        $data['mois'] = $moisLabels[$data['mois']] ?? "Janvier";
+        // Garder la valeur numérique pour les calculs
+        $mois_numerique = intval($data['mois']);
+        // Convertir en libellé pour le stockage
+        $data['mois'] = $moisLabels[$mois_numerique] ?? "Janvier";
         
         // Convertir les valeurs numériques potentiellement NULL en 0
         foreach ($data as $key => $value) {
@@ -97,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        $calculatedFields = calculateFields($data);
+        $calculatedFields = calculateFields($mois_numerique, $data);
         
         $params = array_merge($data, $calculatedFields);
         
@@ -134,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'];
         
-        // Conversion de la valeur numérique du mois en libellé
-        global $moisLabels;
-        $mois_numerique = $data['mois'];  // Garder la valeur numérique pour les calculs
-        $data['mois'] = $moisLabels[$data['mois']] ?? "Janvier";
+        // Garder la valeur numérique pour les calculs
+        $mois_numerique = intval($data['mois']);
+        // Convertir en libellé pour le stockage
+        $data['mois'] = $moisLabels[$mois_numerique] ?? "Janvier";
         
         // Appliquer les mêmes conversions que pour l'insertion
         foreach ($data as $key => $value) {
@@ -147,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             }
         }
         
-        $calculatedFields = calculateFields($data);
+        $calculatedFields = calculateFields($mois_numerique, $data);
         
         $sql = "UPDATE budget_entries SET 
                 axeIT = :axeIT,
