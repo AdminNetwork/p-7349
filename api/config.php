@@ -6,9 +6,9 @@ header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
 $host = 'localhost';
-$db   = 'BUDGET';
+$db   = 'kevin_api';
 $user = 'root';
-$pass = ''; // Mot de passe par défaut de WAMP
+$pass = ''; // Mot de passe vide comme indiqué
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
