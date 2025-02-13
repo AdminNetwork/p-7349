@@ -26,19 +26,19 @@ export interface FinancialFormData {
   libContrePartie: string;
   annee: number;
   mois: number;
-  montantReel?: number;
-  budget?: number;
-  atterissage?: number;
-  plan?: number;
-  ecart_budget_reel?: number;
-  ecart_budget_atterissage?: number;
-  budget_ytd?: number;
-  budget_vs_reel_ytd?: number;
+  montantReel: number;
+  budget: number;
+  atterissage: number;
+  plan: number;
+  ecart_budget_reel: number;
+  ecart_budget_atterissage: number;
+  budget_ytd: number;
+  budget_vs_reel_ytd: number;
 }
 
 export interface CalculatedFields {
-  ecartBudgetReel: number;
-  ecartBudgetAtterrissage: number;
-  budgetYTD: number;
-  budgetVsReelYTD: number;
+  ecart_budget_reel: number;
+  ecart_budget_atterissage: number;
+  budget_ytd: number;
+  budget_vs_reel_ytd: number;
 }

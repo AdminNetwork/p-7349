@@ -23,20 +23,12 @@ function calculateFields($data) {
     error_log("Type de atterissage: " . gettype($atterissage) . ", Valeur: $atterissage");
 
     // Calcul des champs avec des valeurs par défaut à 0
-    $calculatedFields = [
+    return [
         'ecart_budget_reel' => $budget - $montantReel,
         'ecart_budget_atterissage' => $budget - $atterissage,
         'budget_ytd' => $budget ? ($budget * $mois) / 12 : 0,
         'budget_vs_reel_ytd' => ($budget ? ($budget * $mois) / 12 : 0) - $montantReel
     ];
-
-    error_log("Résultats calculés:");
-    foreach ($calculatedFields as $key => $value) {
-        error_log("$key: " . gettype($value) . ", Valeur: $value");
-    }
-    error_log("=== FIN DU CALCUL DES CHAMPS ===");
-
-    return $calculatedFields;
 }
 
 // Récupérer toutes les entrées
