@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -27,12 +28,12 @@ function calculateFields($data) {
     error_log("Type de montantReel: " . gettype($montantReel) . ", Valeur: $montantReel");
     error_log("Type de atterissage: " . gettype($atterissage) . ", Valeur: $atterissage");
 
-    // Calcul des champs avec vérification explicite des valeurs nulles
+    // Calcul des champs en utilisant les variables déjà vérifiées et converties
     $calculatedFields = [
-        'ecart_budget_reel' => floatval($budget) - floatval($montantReel),
-        'ecart_budget_atterissage' => floatval($budget) - floatval($atterissage),
-        'budget_ytd' => floatval($budget) > 0 ? (floatval($budget) * floatval($mois)) / 12 : 0,
-        'budget_vs_reel_ytd' => (floatval($budget) > 0 ? (floatval($budget) * floatval($mois)) / 12 : 0) - floatval($montantReel)
+        'ecart_budget_reel' => $budget - $montantReel,
+        'ecart_budget_atterissage' => $budget - $atterissage,
+        'budget_ytd' => $budget > 0 ? ($budget * $mois) / 12 : 0,
+        'budget_vs_reel_ytd' => ($budget > 0 ? ($budget * $mois) / 12 : 0) - $montantReel
     ];
 
     // Vérification finale pour s'assurer qu'aucune valeur n'est NULL
