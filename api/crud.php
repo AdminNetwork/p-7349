@@ -4,17 +4,29 @@ require_once 'config.php';
 
 // Fonction pour calculer les champs
 function calculateFields($data) {
-    $mois = $data['mois'] ?? 1;
-    $budget = $data['budget'] ?? 0;
-    $montantReel = $data['montantReel'] ?? 0;
-    $atterissage = $data['atterissage'] ?? 0;
+    // Conversion explicite en nombres
+    $mois = isset($data['mois']) ? floatval($data['mois']) : 1;
+    $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
+    $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
+    $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
 
-    return [
+    // Calcul des champs avec des valeurs par défaut à 0
+    $calculatedFields = [
         'ecart_budget_reel' => $budget - $montantReel,
         'ecart_budget_atterissage' => $budget - $atterissage,
         'budget_ytd' => $budget ? ($budget * $mois) / 12 : 0,
         'budget_vs_reel_ytd' => ($budget ? ($budget * $mois) / 12 : 0) - $montantReel
     ];
+
+    // Log pour debug
+    error_log("Valeurs utilisées pour les calculs:");
+    error_log("mois: $mois");
+    error_log("budget: $budget");
+    error_log("montantReel: $montantReel");
+    error_log("atterissage: $atterissage");
+    error_log("Résultats calculés: " . print_r($calculatedFields, true));
+
+    return $calculatedFields;
 }
 
 // Récupérer toutes les entrées
@@ -32,7 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
+        
+        // Debug des données reçues
+        error_log("Données reçues du frontend: " . print_r($data, true));
+        
+        // Calcul des champs
         $calculatedFields = calculateFields($data);
+        
+        // Préparation des paramètres pour la requête SQL
+        $params = array_merge($data, $calculatedFields);
         
         $sql = "INSERT INTO budget_entries (
                 axeIT, groupe2, contrePartie, libContrePartie, 
@@ -46,17 +66,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $stmt = $pdo->prepare($sql);
         
-        // Debug: afficher les valeurs avant l'insertion
-        error_log("Data avant insertion: " . print_r($data, true));
-        error_log("Champs calculés: " . print_r($calculatedFields, true));
+        // Debug final avant exécution
+        error_log("Paramètres finaux pour l'insertion: " . print_r($params, true));
         
-        $params = array_merge($data, $calculatedFields);
         $stmt->execute($params);
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
         http_response_code(500);
         error_log("Erreur SQL: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
