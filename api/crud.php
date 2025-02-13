@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -76,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("Données brutes reçues: " . $rawData);
         
         $data = json_decode($rawData, true);
+        error_log("Données décodées: " . print_r($data, true));
         
         // Convertir les valeurs numériques potentiellement NULL en 0
         foreach ($data as $key => $value) {
@@ -86,7 +88,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $calculatedFields = calculateFields($data);
+        
+        // S'assurer que tous les champs calculés sont bien définis et non NULL
+        foreach ($calculatedFields as $key => $value) {
+            $calculatedFields[$key] = floatval($value);
+            if (!is_numeric($calculatedFields[$key])) {
+                $calculatedFields[$key] = 0;
+            }
+        }
+        
         $params = array_merge($data, $calculatedFields);
+        
+        // Vérification finale de tous les paramètres
+        foreach ($params as $key => $value) {
+            if (in_array($key, [
+                'montantReel', 'budget', 'atterissage', 'plan',
+                'ecart_budget_reel', 'ecart_budget_atterissage',
+                'budget_ytd', 'budget_vs_reel_ytd'
+            ])) {
+                $params[$key] = floatval($value);
+                if (!is_numeric($params[$key])) {
+                    $params[$key] = 0;
+                }
+            }
+        }
+        
+        error_log("Paramètres finaux pour l'insertion: " . print_r($params, true));
         
         $sql = "INSERT INTO budget_entries (
                 axeIT, groupe2, contrePartie, libContrePartie, 
@@ -99,12 +126,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )";
         
         $stmt = $pdo->prepare($sql);
+        error_log("SQL préparé: " . $sql);
+        
         $stmt->execute($params);
+        error_log("Exécution SQL réussie");
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (Exception $e) {
         http_response_code(500);
         error_log("ERREUR: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
@@ -114,7 +145,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'];
+        
+        // Appliquer les mêmes conversions que pour l'insertion
+        foreach ($data as $key => $value) {
+            if (in_array($key, ['montantReel', 'budget', 'atterissage', 'plan']) && 
+                ($value === null || !is_numeric($value))) {
+                $data[$key] = 0;
+            }
+        }
+        
         $calculatedFields = calculateFields($data);
+        
+        // Vérification finale de tous les champs calculés
+        foreach ($calculatedFields as $key => $value) {
+            $calculatedFields[$key] = floatval($value);
+            if (!is_numeric($calculatedFields[$key])) {
+                $calculatedFields[$key] = 0;
+            }
+        }
         
         $sql = "UPDATE budget_entries SET 
                 axeIT = :axeIT,
