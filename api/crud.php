@@ -1,4 +1,3 @@
-
 <?php
 require_once 'config.php';
 
@@ -30,10 +29,10 @@ function calculateFields($data) {
 
     // Calcul des champs avec vérification explicite des valeurs nulles
     $calculatedFields = [
-        'ecart_budget_reel' => floatval($budget - $montantReel),
-        'ecart_budget_atterissage' => floatval($budget - $atterissage),
-        'budget_ytd' => floatval($budget > 0 ? ($budget * $mois) / 12 : 0),
-        'budget_vs_reel_ytd' => floatval(($budget > 0 ? ($budget * $mois) / 12 : 0) - $montantReel)
+        'ecart_budget_reel' => floatval($budget) - floatval($montantReel),
+        'ecart_budget_atterissage' => floatval($budget) - floatval($atterissage),
+        'budget_ytd' => floatval($budget) > 0 ? (floatval($budget) * floatval($mois)) / 12 : 0,
+        'budget_vs_reel_ytd' => (floatval($budget) > 0 ? (floatval($budget) * floatval($mois)) / 12 : 0) - floatval($montantReel)
     ];
 
     // Vérification finale pour s'assurer qu'aucune valeur n'est NULL
@@ -43,24 +42,26 @@ function calculateFields($data) {
         }
     }
 
+    error_log("Champs calculés : " . print_r($calculatedFields, true));
     return $calculatedFields;
 }
 
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $stmt = $pdo->query('SELECT * FROM budget_entries');
+        $stmt = $pdo->query('SELECT 
+            id, axeIT, groupe2, contrePartie, libContrePartie, 
+            annee, mois, 
+            COALESCE(montantReel, 0) as montantReel,
+            COALESCE(budget, 0) as budget,
+            COALESCE(atterissage, 0) as atterissage,
+            COALESCE(plan, 0) as plan,
+            COALESCE(ecart_budget_reel, 0) as ecart_budget_reel,
+            COALESCE(ecart_budget_atterissage, 0) as ecart_budget_atterissage,
+            COALESCE(budget_ytd, 0) as budget_ytd,
+            COALESCE(budget_vs_reel_ytd, 0) as budget_vs_reel_ytd
+            FROM budget_entries');
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Convertir les valeurs NULL en 0 dans les résultats
-        foreach ($results as &$row) {
-            foreach ($row as $key => $value) {
-                if ($value === null || !is_numeric($value)) {
-                    $row[$key] = 0;
-                }
-            }
-        }
-        
         echo json_encode($results);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -99,20 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $params = array_merge($data, $calculatedFields);
         
-        // Vérification finale de tous les paramètres
-        foreach ($params as $key => $value) {
-            if (in_array($key, [
-                'montantReel', 'budget', 'atterissage', 'plan',
-                'ecart_budget_reel', 'ecart_budget_atterissage',
-                'budget_ytd', 'budget_vs_reel_ytd'
-            ])) {
-                $params[$key] = floatval($value);
-                if (!is_numeric($params[$key])) {
-                    $params[$key] = 0;
-                }
-            }
-        }
-        
         error_log("Paramètres finaux pour l'insertion: " . print_r($params, true));
         
         $sql = "INSERT INTO budget_entries (
@@ -125,11 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
                 )";
         
-        $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
+        $stmt = $pdo->prepare($sql);
         
+        error_log("Exécution avec les paramètres: " . print_r($params, true));
         $stmt->execute($params);
-        error_log("Exécution SQL réussie");
+        
+        error_log("Insertion réussie. ID: " . $pdo->lastInsertId());
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (Exception $e) {
