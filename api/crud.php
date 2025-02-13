@@ -8,20 +8,31 @@ ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
 // Tableau de correspondance des mois
-$moisLabels = [
-    1 => "Janvier",
-    2 => "Février",
-    3 => "Mars",
-    4 => "Avril",
-    5 => "Mai",
-    6 => "Juin",
-    7 => "Juillet",
-    8 => "Août",
-    9 => "Septembre",
-    10 => "Octobre",
-    11 => "Novembre",
-    12 => "Décembre"
+$monthsData = [
+    ['value' => 1, 'label' => "Janvier"],
+    ['value' => 2, 'label' => "Février"],
+    ['value' => 3, 'label' => "Mars"],
+    ['value' => 4, 'label' => "Avril"],
+    ['value' => 5, 'label' => "Mai"],
+    ['value' => 6, 'label' => "Juin"],
+    ['value' => 7, 'label' => "Juillet"],
+    ['value' => 8, 'label' => "Août"],
+    ['value' => 9, 'label' => "Septembre"],
+    ['value' => 10, 'label' => "Octobre"],
+    ['value' => 11, 'label' => "Novembre"],
+    ['value' => 12, 'label' => "Décembre"]
 ];
+
+// Fonction pour obtenir le label du mois
+function getMonthLabel($value) {
+    global $monthsData;
+    foreach ($monthsData as $month) {
+        if ($month['value'] === intval($value)) {
+            return $month['label'];
+        }
+    }
+    return "Janvier"; // Valeur par défaut
+}
 
 // Fonction pour calculer les champs
 function calculateFields($mois_numerique, $data) {
@@ -84,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Garder la valeur numérique pour les calculs
         $mois_numerique = intval($data['mois']);
-        // Convertir en libellé pour le stockage
-        $data['mois'] = $moisLabels[$mois_numerique] ?? "Janvier";
+        // Convertir en libellé pour le stockage en utilisant la fonction getMonthLabel
+        $data['mois'] = getMonthLabel($mois_numerique);
         
         // Convertir les valeurs numériques potentiellement NULL en 0
         foreach ($data as $key => $value) {
@@ -134,8 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         
         // Garder la valeur numérique pour les calculs
         $mois_numerique = intval($data['mois']);
-        // Convertir en libellé pour le stockage
-        $data['mois'] = $moisLabels[$mois_numerique] ?? "Janvier";
+        // Convertir en libellé pour le stockage en utilisant la fonction getMonthLabel
+        $data['mois'] = getMonthLabel($mois_numerique);
         
         // Appliquer les mêmes conversions que pour l'insertion
         foreach ($data as $key => $value) {
