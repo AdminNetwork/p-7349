@@ -1,4 +1,3 @@
-
 <?php
 require_once 'config.php';
 
@@ -9,17 +8,11 @@ error_reporting(E_ALL);
 
 // Fonction pour calculer les champs
 function calculateFields($data) {
-    // Conversion explicite en nombres avec valeurs par défaut à 0
-    $mois = isset($data['mois']) ? floatval($data['mois']) : 1;
-    $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
-    $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
-    $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
-
-    // Forcer les valeurs à 0 si elles sont NULL ou non numériques
-    $mois = is_numeric($mois) ? $mois : 0;
-    $budget = is_numeric($budget) ? $budget : 0;
-    $montantReel = is_numeric($montantReel) ? $montantReel : 0;
-    $atterissage = is_numeric($atterissage) ? $atterissage : 0;
+    // Conversion en nombres, mais en gardant les valeurs non-nulles
+    $mois = isset($data['mois']) && !is_null($data['mois']) ? floatval($data['mois']) : 1;
+    $budget = isset($data['budget']) && !is_null($data['budget']) ? floatval($data['budget']) : 0;
+    $montantReel = isset($data['montantReel']) && !is_null($data['montantReel']) ? floatval($data['montantReel']) : 0;
+    $atterissage = isset($data['atterissage']) && !is_null($data['atterissage']) ? floatval($data['atterissage']) : 0;
 
     // Log détaillé des données reçues
     error_log("=== DÉBUT DU CALCUL DES CHAMPS ===");
@@ -28,20 +21,13 @@ function calculateFields($data) {
     error_log("Type de montantReel: " . gettype($montantReel) . ", Valeur: $montantReel");
     error_log("Type de atterissage: " . gettype($atterissage) . ", Valeur: $atterissage");
 
-    // Calcul des champs en utilisant les variables déjà vérifiées et converties
+    // Calcul des champs en gardant les valeurs non-nulles
     $calculatedFields = [
         'ecart_budget_reel' => $budget - $montantReel,
         'ecart_budget_atterissage' => $budget - $atterissage,
-        'budget_ytd' => $budget > 0 ? ($budget * $mois) / 12 : 0,
-        'budget_vs_reel_ytd' => ($budget > 0 ? ($budget * $mois) / 12 : 0) - $montantReel
+        'budget_ytd' => $budget !== 0 ? ($budget * $mois) / 12 : 0,
+        'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois) / 12 : 0) - $montantReel
     ];
-
-    // Vérification finale pour s'assurer qu'aucune valeur n'est NULL
-    foreach ($calculatedFields as $key => $value) {
-        if ($value === null || !is_numeric($value)) {
-            $calculatedFields[$key] = 0;
-        }
-    }
 
     error_log("Champs calculés : " . print_r($calculatedFields, true));
     return $calculatedFields;
