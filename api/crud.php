@@ -2,6 +2,21 @@
 <?php
 require_once 'config.php';
 
+// Fonction pour calculer les champs
+function calculateFields($data) {
+    $mois = $data['mois'] ?? 1;
+    $budget = $data['budget'] ?? 0;
+    $montantReel = $data['montantReel'] ?? 0;
+    $atterissage = $data['atterissage'] ?? 0;
+
+    return [
+        'ecart_budget_reel' => $budget - $montantReel,
+        'ecart_budget_atterissage' => $budget - $atterissage,
+        'budget_ytd' => $budget ? ($budget * $mois) / 12 : 0,
+        'budget_vs_reel_ytd' => ($budget ? ($budget * $mois) / 12 : 0) - $montantReel
+    ];
+}
+
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
@@ -17,14 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
+        $calculatedFields = calculateFields($data);
         
-        $sql = "INSERT INTO budget_entries (axeIT, groupe2, contrePartie, libContrePartie, 
-                annee, mois, montantReel, budget, atterissage, plan) 
-                VALUES (:axeIT, :groupe2, :contrePartie, :libContrePartie, 
-                :annee, :mois, :montantReel, :budget, :atterissage, :plan)";
+        $sql = "INSERT INTO budget_entries (
+                axeIT, groupe2, contrePartie, libContrePartie, 
+                annee, mois, montantReel, budget, atterissage, plan,
+                ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
+                ) VALUES (
+                :axeIT, :groupe2, :contrePartie, :libContrePartie, 
+                :annee, :mois, :montantReel, :budget, :atterissage, :plan,
+                :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
+                )";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute($data);
+        $stmt->execute(array_merge($data, $calculatedFields));
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
@@ -38,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'];
+        $calculatedFields = calculateFields($data);
         
         $sql = "UPDATE budget_entries SET 
                 axeIT = :axeIT,
@@ -49,11 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
                 montantReel = :montantReel,
                 budget = :budget,
                 atterissage = :atterissage,
-                plan = :plan
+                plan = :plan,
+                ecart_budget_reel = :ecart_budget_reel,
+                ecart_budget_atterissage = :ecart_budget_atterissage,
+                budget_ytd = :budget_ytd,
+                budget_vs_reel_ytd = :budget_vs_reel_ytd
                 WHERE id = :id";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute($data);
+        $stmt->execute(array_merge($data, $calculatedFields));
         
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
