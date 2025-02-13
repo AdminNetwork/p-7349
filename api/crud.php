@@ -25,15 +25,15 @@ $moisLabels = [
 
 // Fonction pour calculer les champs
 function calculateFields($data) {
-    // Conversion en nombres, mais en gardant les valeurs non-nulles
-    $mois = isset($data['mois']) && !is_null($data['mois']) ? floatval($data['mois']) : 1;
+    // Utiliser la valeur numérique pour les calculs
+    $mois_numerique = array_search($data['mois'], $GLOBALS['moisLabels']) ?: 1;
     $budget = isset($data['budget']) && !is_null($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) && !is_null($data['montantReel']) ? floatval($data['montantReel']) : 0;
     $atterissage = isset($data['atterissage']) && !is_null($data['atterissage']) ? floatval($data['atterissage']) : 0;
 
     // Log détaillé des données reçues
     error_log("=== DÉBUT DU CALCUL DES CHAMPS ===");
-    error_log("Type de mois: " . gettype($mois) . ", Valeur: $mois");
+    error_log("Type de mois: " . gettype($mois_numerique) . ", Valeur: $mois_numerique");
     error_log("Type de budget: " . gettype($budget) . ", Valeur: $budget");
     error_log("Type de montantReel: " . gettype($montantReel) . ", Valeur: $montantReel");
     error_log("Type de atterissage: " . gettype($atterissage) . ", Valeur: $atterissage");
@@ -42,8 +42,8 @@ function calculateFields($data) {
     $calculatedFields = [
         'ecart_budget_reel' => $budget - $montantReel,
         'ecart_budget_atterissage' => $budget - $atterissage,
-        'budget_ytd' => $budget !== 0 ? ($budget * $mois) / 12 : 0,
-        'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois) / 12 : 0) - $montantReel
+        'budget_ytd' => $budget !== 0 ? ($budget * $mois_numerique) / 12 : 0,
+        'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois_numerique) / 12 : 0) - $montantReel
     ];
 
     error_log("Champs calculés : " . print_r($calculatedFields, true));
@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Conversion de la valeur numérique du mois en libellé
         global $moisLabels;
+        $mois_numerique = $data['mois'];  // Garder la valeur numérique pour les calculs
         $data['mois'] = $moisLabels[$data['mois']] ?? "Janvier";
         
         // Convertir les valeurs numériques potentiellement NULL en 0
@@ -97,14 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $calculatedFields = calculateFields($data);
-        
-        // S'assurer que tous les champs calculés sont bien définis et non NULL
-        foreach ($calculatedFields as $key => $value) {
-            $calculatedFields[$key] = floatval($value);
-            if (!is_numeric($calculatedFields[$key])) {
-                $calculatedFields[$key] = 0;
-            }
-        }
         
         $params = array_merge($data, $calculatedFields);
         
@@ -126,8 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("Exécution avec les paramètres: " . print_r($params, true));
         $stmt->execute($params);
         
-        error_log("Insertion réussie. ID: " . $pdo->lastInsertId());
-        
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (Exception $e) {
         http_response_code(500);
@@ -145,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         
         // Conversion de la valeur numérique du mois en libellé
         global $moisLabels;
+        $mois_numerique = $data['mois'];  // Garder la valeur numérique pour les calculs
         $data['mois'] = $moisLabels[$data['mois']] ?? "Janvier";
         
         // Appliquer les mêmes conversions que pour l'insertion
@@ -156,14 +148,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         }
         
         $calculatedFields = calculateFields($data);
-        
-        // Vérification finale de tous les champs calculés
-        foreach ($calculatedFields as $key => $value) {
-            $calculatedFields[$key] = floatval($value);
-            if (!is_numeric($calculatedFields[$key])) {
-                $calculatedFields[$key] = 0;
-            }
-        }
         
         $sql = "UPDATE budget_entries SET 
                 axeIT = :axeIT,
