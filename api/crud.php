@@ -2,6 +2,11 @@
 <?php
 require_once 'config.php';
 
+// Activation des logs d'erreur PHP
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
+
 // Fonction pour calculer les champs
 function calculateFields($data) {
     // Conversion explicite en nombres
@@ -9,6 +14,13 @@ function calculateFields($data) {
     $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
     $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
+
+    // Log détaillé des données reçues
+    error_log("=== DÉBUT DU CALCUL DES CHAMPS ===");
+    error_log("Type de mois: " . gettype($mois) . ", Valeur: $mois");
+    error_log("Type de budget: " . gettype($budget) . ", Valeur: $budget");
+    error_log("Type de montantReel: " . gettype($montantReel) . ", Valeur: $montantReel");
+    error_log("Type de atterissage: " . gettype($atterissage) . ", Valeur: $atterissage");
 
     // Calcul des champs avec des valeurs par défaut à 0
     $calculatedFields = [
@@ -18,13 +30,11 @@ function calculateFields($data) {
         'budget_vs_reel_ytd' => ($budget ? ($budget * $mois) / 12 : 0) - $montantReel
     ];
 
-    // Log pour debug
-    error_log("Valeurs utilisées pour les calculs:");
-    error_log("mois: $mois");
-    error_log("budget: $budget");
-    error_log("montantReel: $montantReel");
-    error_log("atterissage: $atterissage");
-    error_log("Résultats calculés: " . print_r($calculatedFields, true));
+    error_log("Résultats calculés:");
+    foreach ($calculatedFields as $key => $value) {
+        error_log("$key: " . gettype($value) . ", Valeur: $value");
+    }
+    error_log("=== FIN DU CALCUL DES CHAMPS ===");
 
     return $calculatedFields;
 }
@@ -43,16 +53,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // Ajouter une nouvelle entrée
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $data = json_decode(file_get_contents('php://input'), true);
+        error_log("=== DÉBUT DE L'INSERTION ===");
         
-        // Debug des données reçues
-        error_log("Données reçues du frontend: " . print_r($data, true));
+        $rawData = file_get_contents('php://input');
+        error_log("Données brutes reçues: " . $rawData);
         
-        // Calcul des champs
+        $data = json_decode($rawData, true);
+        error_log("Données décodées: " . print_r($data, true));
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Erreur de décodage JSON: " . json_last_error_msg());
+        }
+        
         $calculatedFields = calculateFields($data);
-        
-        // Préparation des paramètres pour la requête SQL
         $params = array_merge($data, $calculatedFields);
+        
+        error_log("Paramètres finaux pour l'insertion:");
+        foreach ($params as $key => $value) {
+            error_log("$key: " . gettype($value) . ", Valeur: " . print_r($value, true));
+        }
         
         $sql = "INSERT INTO budget_entries (
                 axeIT, groupe2, contrePartie, libContrePartie, 
@@ -65,16 +84,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )";
         
         $stmt = $pdo->prepare($sql);
-        
-        // Debug final avant exécution
-        error_log("Paramètres finaux pour l'insertion: " . print_r($params, true));
-        
         $stmt->execute($params);
         
+        error_log("Insertion réussie, ID: " . $pdo->lastInsertId());
+        error_log("=== FIN DE L'INSERTION ===");
+        
         echo json_encode(['id' => $pdo->lastInsertId()]);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         http_response_code(500);
-        error_log("Erreur SQL: " . $e->getMessage());
+        error_log("ERREUR: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());
         echo json_encode(['error' => $e->getMessage()]);
     }
