@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -5,6 +6,22 @@ require_once 'config.php';
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
+
+// Tableau de correspondance des mois
+$moisLabels = [
+    1 => "Janvier",
+    2 => "Février",
+    3 => "Mars",
+    4 => "Avril",
+    5 => "Mai",
+    6 => "Juin",
+    7 => "Juillet",
+    8 => "Août",
+    9 => "Septembre",
+    10 => "Octobre",
+    11 => "Novembre",
+    12 => "Décembre"
+];
 
 // Fonction pour calculer les champs
 function calculateFields($data) {
@@ -66,6 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $data = json_decode($rawData, true);
         error_log("Données décodées: " . print_r($data, true));
+
+        // Conversion de la valeur numérique du mois en libellé
+        global $moisLabels;
+        $data['mois'] = $moisLabels[$data['mois']] ?? "Janvier";
         
         // Convertir les valeurs numériques potentiellement NULL en 0
         foreach ($data as $key => $value) {
@@ -121,6 +142,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'];
+        
+        // Conversion de la valeur numérique du mois en libellé
+        global $moisLabels;
+        $data['mois'] = $moisLabels[$data['mois']] ?? "Janvier";
         
         // Appliquer les mêmes conversions que pour l'insertion
         foreach ($data as $key => $value) {
