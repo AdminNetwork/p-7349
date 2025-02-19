@@ -1,4 +1,3 @@
-
 <?php
 require_once 'config.php';
 
@@ -66,8 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = json_decode(file_get_contents('php://input'), true);
         
         // Validation des données reçues
-        if (!isset($data['mois']) || !isset($data['annee']) || !isset($data['annee_plan'])) {
-            throw new Exception('Données manquantes');
+        $requiredFields = ['mois', 'annee', 'annee_plan', 'axeIT', 'groupe2', 'contrePartie', 'libContrePartie'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                throw new Exception("Champ obligatoire manquant: $field");
+            }
         }
 
         // Conversion du mois numérique en libellé
@@ -95,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $pdo->prepare($sql);
         
+        // Assurons-nous que tous les paramètres sont définis
         $params = [
             ':axeIT' => $data['axeIT'],
             ':groupe2' => $data['groupe2'],
@@ -112,12 +115,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':budget_ytd' => $calculatedFields['budget_ytd'],
             ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
         ];
+
+        // Debug des paramètres
+        error_log("Paramètres SQL: " . print_r($params, true));
         
         $stmt->execute($params);
         
-        echo json_encode(['id' => $pdo->lastInsertId()]);
+        echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
     } catch (Exception $e) {
         http_response_code(500);
+        error_log("Erreur SQL: " . $e->getMessage());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
