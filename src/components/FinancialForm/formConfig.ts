@@ -5,8 +5,13 @@ const currentYear = new Date().getFullYear();
 const startYear = 2000;
 
 export const yearRange = Array.from(
-  { length: currentYear - startYear + 10 }, 
+  { length: currentYear - startYear + 1 }, 
   (_, i) => startYear + i
+);
+
+export const planYearRange = Array.from(
+  { length: 10 }, 
+  (_, i) => currentYear + 1 + i
 );
 
 export const monthsData = [
@@ -30,6 +35,7 @@ export const formSchema = z.object({
   contrePartie: z.string().min(1, "La Contre-partie est requise"),
   libContrePartie: z.string().min(1, "Le libellé de contre-partie est requis"),
   annee: z.number().min(startYear, `L'année doit être supérieure ou égale à ${startYear}`),
+  annee_plan: z.number().min(currentYear + 1, "L'année du plan doit être une année future"),
   mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),

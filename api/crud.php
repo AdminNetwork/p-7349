@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = json_decode(file_get_contents('php://input'), true);
         
         // Validation des données reçues
-        if (!isset($data['mois']) || !isset($data['annee'])) {
+        if (!isset($data['mois']) || !isset($data['annee']) || !isset($data['annee_plan'])) {
             throw new Exception('Données manquantes');
         }
 
@@ -85,11 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $sql = "INSERT INTO budget_entries (
             axeIT, groupe2, contrePartie, libContrePartie, 
-            annee, mois, montantReel, budget, atterissage, plan,
+            annee, annee_plan, mois, montantReel, budget, atterissage, plan,
             ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
         ) VALUES (
             :axeIT, :groupe2, :contrePartie, :libContrePartie,
-            :annee, :mois, :montantReel, :budget, :atterissage, :plan,
+            :annee, :annee_plan, :mois, :montantReel, :budget, :atterissage, :plan,
             :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
         )";
 
@@ -101,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':contrePartie' => $data['contrePartie'],
             ':libContrePartie' => $data['libContrePartie'],
             ':annee' => intval($data['annee']),
+            ':annee_plan' => intval($data['annee_plan']),
             ':mois' => $mois_libelle,
             ':montantReel' => $montantReel,
             ':budget' => $budget,
@@ -138,6 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             contrePartie = :contrePartie,
             libContrePartie = :libContrePartie,
             annee = :annee,
+            annee_plan = :annee_plan,
             mois = :mois,
             montantReel = :montantReel,
             budget = :budget,
@@ -158,6 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             ':contrePartie' => $data['contrePartie'],
             ':libContrePartie' => $data['libContrePartie'],
             ':annee' => intval($data['annee']),
+            ':annee_plan' => intval($data['annee_plan']),
             ':mois' => $mois_libelle,
             ':montantReel' => floatval($data['montantReel'] ?? 0),
             ':budget' => floatval($data['budget'] ?? 0),
