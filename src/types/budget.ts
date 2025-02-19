@@ -25,7 +25,7 @@ export interface FinancialFormData {
   contrePartie: string;
   libContrePartie: string;
   annee: number;
-  mois: number;
+  mois: string;
   montantReel: number;
   budget: number;
   atterissage: number;

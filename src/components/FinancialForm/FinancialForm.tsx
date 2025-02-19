@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -47,18 +46,21 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
         const monthEntry = monthsData.find(m => m.label === entryToEdit.mois);
         const monthNumber = monthEntry ? monthEntry.value : 1;
         
-        form.reset({
+        // Conversion explicite des valeurs numériques
+        const formData = {
           axeIT: entryToEdit.axeIT,
           groupe2: entryToEdit.groupe2,
           contrePartie: entryToEdit.contrePartie,
           libContrePartie: entryToEdit.libContrePartie,
-          annee: entryToEdit.annee,
+          annee: Number(entryToEdit.annee),
           mois: monthNumber,
-          montantReel: entryToEdit.montantReel,
-          budget: entryToEdit.budget,
-          atterissage: entryToEdit.atterissage,
-          plan: entryToEdit.plan,
-        });
+          montantReel: Number(entryToEdit.montantReel) || undefined,
+          budget: Number(entryToEdit.budget) || undefined,
+          atterissage: Number(entryToEdit.atterissage) || undefined,
+          plan: Number(entryToEdit.plan) || undefined,
+        };
+        
+        form.reset(formData);
       }
     }
   }, [editingId, entries, form]);
