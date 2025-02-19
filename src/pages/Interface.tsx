@@ -105,7 +105,11 @@ export default function Interface() {
           <CardTitle>Gestion des Données Financières</CardTitle>
         </CardHeader>
         <CardContent>
-          <FinancialForm onSubmit={handleSubmit} editingId={editingId} />
+          <FinancialForm 
+            onSubmit={handleSubmit} 
+            editingId={editingId}
+            entries={entries} 
+          />
         </CardContent>
       </Card>
 

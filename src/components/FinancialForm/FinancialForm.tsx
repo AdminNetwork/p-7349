@@ -10,15 +10,17 @@ import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
 import { monthsData, yearRange, formSchema } from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
+import { useEffect } from "react";
 
 type FormSchema = z.infer<typeof formSchema>;
 
 interface FinancialFormProps {
   onSubmit: (values: FormSchema) => Promise<void>;
   editingId: number | null;
+  entries?: FinancialFormData[];
 }
 
-export function FinancialForm({ onSubmit, editingId }: FinancialFormProps) {
+export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFormProps) {
   const currentDate = new Date();
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -35,6 +37,30 @@ export function FinancialForm({ onSubmit, editingId }: FinancialFormProps) {
       plan: undefined,
     },
   });
+
+  // Effet pour pré-remplir le formulaire lors de la modification
+  useEffect(() => {
+    if (editingId && entries) {
+      const entryToEdit = entries.find(entry => entry.id === editingId);
+      if (entryToEdit) {
+        // Conversion du mois de string (ex: "Janvier") en number (1)
+        const monthNumber = monthsData.find(m => m.label === entryToEdit.mois)?.value || 1;
+        
+        form.reset({
+          axeIT: entryToEdit.axeIT,
+          groupe2: entryToEdit.groupe2,
+          contrePartie: entryToEdit.contrePartie,
+          libContrePartie: entryToEdit.libContrePartie,
+          annee: entryToEdit.annee,
+          mois: monthNumber,
+          montantReel: entryToEdit.montantReel,
+          budget: entryToEdit.budget,
+          atterissage: entryToEdit.atterissage,
+          plan: entryToEdit.plan,
+        });
+      }
+    }
+  }, [editingId, entries, form]);
 
   const formValues = form.watch();
 
