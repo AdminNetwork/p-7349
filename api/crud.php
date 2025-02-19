@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -72,19 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
 
+        // Requête SQL avec exactement 11 colonnes et 11 paramètres
         $sql = "INSERT INTO budget_entries (
             axeIT, groupe2, contrePartie, libContrePartie, 
-            annee, annee_plan, mois, montantReel, budget, atterissage, plan,
-            ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
-        ) VALUES (
-            ?, ?, ?, ?, 
-            ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?
-        )";
+            annee, annee_plan, mois, montantReel, budget, atterissage, plan
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
 
+        // Tableau avec exactement 11 paramètres
         $params = [
             $data['axeIT'],
             $data['groupe2'],
@@ -96,17 +94,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
             floatval($data['atterissage'] ?? 0),
-            floatval($data['plan'] ?? 0),
-            $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['ecart_budget_atterissage'],
-            $calculatedFields['budget_ytd'],
-            $calculatedFields['budget_vs_reel_ytd']
+            floatval($data['plan'] ?? 0)
         ];
 
         error_log("Paramètres pour l'exécution: " . print_r($params, true));
         
         $stmt->execute($params);
         $newId = $pdo->lastInsertId();
+        
+        // Mise à jour des champs calculés dans une requête séparée
+        $updateSql = "UPDATE budget_entries SET 
+            ecart_budget_reel = ?,
+            ecart_budget_atterissage = ?,
+            budget_ytd = ?,
+            budget_vs_reel_ytd = ?
+            WHERE id = ?";
+            
+        $updateParams = [
+            $calculatedFields['ecart_budget_reel'],
+            $calculatedFields['ecart_budget_atterissage'],
+            $calculatedFields['budget_ytd'],
+            $calculatedFields['budget_vs_reel_ytd'],
+            $newId
+        ];
+        
+        $updateStmt = $pdo->prepare($updateSql);
+        $updateStmt->execute($updateParams);
+        
         echo json_encode(['success' => true, 'id' => $newId]);
         
     } catch (Exception $e) {
