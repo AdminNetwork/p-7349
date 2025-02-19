@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
+        error_log("Données reçues: " . print_r($data, true));
         
         // Validation des données reçues
         $requiredFields = ['mois', 'annee', 'annee_plan', 'axeIT', 'groupe2', 'contrePartie', 'libContrePartie'];
@@ -85,6 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
         $plan = isset($data['plan']) ? floatval($data['plan']) : 0;
 
+        // Log des valeurs calculées
+        error_log("Valeurs calculées: " . print_r([
+            'mois_libelle' => $mois_libelle,
+            'montantReel' => $montantReel,
+            'budget' => $budget,
+            'atterissage' => $atterissage,
+            'plan' => $plan,
+            'calculatedFields' => $calculatedFields
+        ], true));
+
         $sql = "INSERT INTO budget_entries (
             axeIT, groupe2, contrePartie, libContrePartie, 
             annee, annee_plan, mois, montantReel, budget, atterissage, plan,
@@ -95,9 +106,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
         )";
 
+        // Log de la requête SQL
+        error_log("Requête SQL: " . $sql);
+
         $stmt = $pdo->prepare($sql);
         
-        // Assurons-nous que tous les paramètres sont définis
         $params = [
             ':axeIT' => $data['axeIT'],
             ':groupe2' => $data['groupe2'],
@@ -121,10 +134,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $stmt->execute($params);
         
-        echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+        $newId = $pdo->lastInsertId();
+        error_log("Nouvel ID inséré: " . $newId);
+        
+        echo json_encode(['success' => true, 'id' => $newId]);
     } catch (Exception $e) {
         http_response_code(500);
         error_log("Erreur SQL: " . $e->getMessage());
+        error_log("Trace complète: " . $e->getTraceAsString());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
