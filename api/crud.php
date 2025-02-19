@@ -1,4 +1,3 @@
-
 <?php
 require_once 'config.php';
 
@@ -63,9 +62,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // Ajouter une nouvelle entrée
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $data = json_decode(file_get_contents('php://input'), true);
-        error_log("Données reçues: " . print_r($data, true));
+        error_log("=== DÉBUT DE L'INSERTION ===");
         
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data) {
+            throw new Exception("Données JSON invalides");
+        }
+        
+        error_log("Données brutes reçues: " . json_encode($data));
+        error_log("Données décodées: " . print_r($data, true));
+
         // Validation des données reçues
         $requiredFields = ['mois', 'annee', 'annee_plan', 'axeIT', 'groupe2', 'contrePartie', 'libContrePartie'];
         foreach ($requiredFields as $field) {
@@ -77,25 +83,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Conversion du mois numérique en libellé
         $mois_numerique = intval($data['mois']);
         $mois_libelle = getMonthLabel($mois_numerique);
-        
+        error_log("Mois converti en libellé: " . $mois_libelle);
+
         // Calcul des champs dérivés
+        error_log("=== DÉBUT DU CALCUL DES CHAMPS ===");
+        error_log("Mois numérique pour calcul: " . $mois_numerique);
+        error_log("Budget: " . ($data['budget'] ?? 0));
+        error_log("Montant réel: " . ($data['montantReel'] ?? 0));
+        error_log("Atterrissage: " . ($data['atterissage'] ?? 0));
+        
         $calculatedFields = calculateFields($mois_numerique, $data);
+        error_log("Champs calculés : " . print_r($calculatedFields, true));
 
-        // Préparation des valeurs par défaut
-        $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
-        $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
-        $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
-        $plan = isset($data['plan']) ? floatval($data['plan']) : 0;
+        // Préparation des paramètres
+        $params = [
+            ':axeIT' => $data['axeIT'],
+            ':groupe2' => $data['groupe2'],
+            ':contrePartie' => $data['contrePartie'],
+            ':libContrePartie' => $data['libContrePartie'],
+            ':annee' => intval($data['annee']),
+            ':annee_plan' => intval($data['annee_plan']),
+            ':mois' => $mois_libelle,
+            ':montantReel' => floatval($data['montantReel'] ?? 0),
+            ':budget' => floatval($data['budget'] ?? 0),
+            ':atterissage' => floatval($data['atterissage'] ?? 0),
+            ':plan' => floatval($data['plan'] ?? 0),
+            ':ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            ':ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
+            ':budget_ytd' => $calculatedFields['budget_ytd'],
+            ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
+        ];
 
-        // Log des valeurs calculées
-        error_log("Valeurs calculées: " . print_r([
-            'mois_libelle' => $mois_libelle,
-            'montantReel' => $montantReel,
-            'budget' => $budget,
-            'atterissage' => $atterissage,
-            'plan' => $plan,
-            'calculatedFields' => $calculatedFields
-        ], true));
+        error_log("Paramètres finaux pour l'insertion: " . print_r($params, true));
 
         $sql = "INSERT INTO budget_entries (
             axeIT, groupe2, contrePartie, libContrePartie, 
@@ -107,42 +126,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
         )";
 
-        // Log de la requête SQL
-        error_log("Requête SQL finale: " . $sql);
+        error_log("SQL préparé: " . $sql);
+        error_log("Exécution avec les paramètres: " . print_r($params, true));
 
         $stmt = $pdo->prepare($sql);
-        
-        $params = [
-            ':axeIT' => $data['axeIT'],
-            ':groupe2' => $data['groupe2'],
-            ':contrePartie' => $data['contrePartie'],
-            ':libContrePartie' => $data['libContrePartie'],
-            ':annee' => intval($data['annee']),
-            ':annee_plan' => intval($data['annee_plan']),
-            ':mois' => $mois_libelle,
-            ':montantReel' => $montantReel,
-            ':budget' => $budget,
-            ':atterissage' => $atterissage,
-            ':plan' => $plan,
-            ':ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
-            ':ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
-            ':budget_ytd' => $calculatedFields['budget_ytd'],
-            ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
-        ];
-
-        // Debug des paramètres finaux
-        error_log("Paramètres finaux: " . print_r($params, true));
-        
         $stmt->execute($params);
         
         $newId = $pdo->lastInsertId();
-        error_log("Nouvel ID inséré: " . $newId);
-        
         echo json_encode(['success' => true, 'id' => $newId]);
+        
     } catch (Exception $e) {
         http_response_code(500);
-        error_log("Erreur SQL: " . $e->getMessage());
-        error_log("Trace complète: " . $e->getTraceAsString());
+        error_log("ERREUR: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
