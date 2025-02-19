@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -285,7 +284,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
                     placeholder="0.00"
                     {...field}
                     onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                    disabled={formValues.annee <= new Date().getFullYear()}
+                    disabled={formValues.annee_plan <= new Date().getFullYear()}
                   />
                 </FormControl>
                 <FormMessage />
