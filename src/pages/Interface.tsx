@@ -36,10 +36,19 @@ export default function Interface() {
 
   const handleSubmit = async (values: FormSchema) => {
     try {
-      console.log('Données soumises:', values); // Debug log
+      // Initialisation des champs numériques à 0 s'ils sont undefined
+      const preparedData = {
+        ...values,
+        montantReel: values.montantReel ?? 0,
+        budget: values.budget ?? 0,
+        atterissage: values.atterissage ?? 0,
+        plan: values.plan ?? 0,
+      };
+
+      console.log('Données préparées:', preparedData); // Debug log
 
       const method = editingId !== null ? 'PUT' : 'POST';
-      const submitData = editingId !== null ? { ...values, id: editingId } : values;
+      const submitData = editingId !== null ? { ...preparedData, id: editingId } : preparedData;
 
       const response = await fetch('http://localhost/api/crud.php', {
         method: method,
