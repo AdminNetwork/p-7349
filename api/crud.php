@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -107,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         )";
 
         // Log de la requête SQL
-        error_log("Requête SQL: " . $sql);
+        error_log("Requête SQL finale: " . $sql);
 
         $stmt = $pdo->prepare($sql);
         
@@ -129,8 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
         ];
 
-        // Debug des paramètres
-        error_log("Paramètres SQL: " . print_r($params, true));
+        // Debug des paramètres finaux
+        error_log("Paramètres finaux: " . print_r($params, true));
         
         $stmt->execute($params);
         
