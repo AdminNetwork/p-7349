@@ -15,9 +15,13 @@ export default function Interface() {
   const loadEntries = async () => {
     try {
       const response = await fetch('http://localhost/api/crud.php');
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des données');
+      }
       const data = await response.json();
       setEntries(data);
     } catch (error) {
+      console.error('Erreur de chargement:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les données",
@@ -32,40 +36,41 @@ export default function Interface() {
 
   const handleSubmit = async (values: FormSchema) => {
     try {
-      if (editingId !== null) {
-        await fetch('http://localhost/api/crud.php', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ...values, id: editingId }),
-        });
+      console.log('Données soumises:', values); // Debug log
 
-        toast({
-          title: "Succès",
-          description: "Les données ont été mises à jour avec succès",
-        });
-      } else {
-        await fetch('http://localhost/api/crud.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        });
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const submitData = editingId !== null ? { ...values, id: editingId } : values;
 
-        toast({
-          title: "Succès",
-          description: "Les nouvelles données ont été enregistrées",
-        });
+      const response = await fetch('http://localhost/api/crud.php', {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la soumission');
       }
+
+      const result = await response.json();
+      console.log('Réponse du serveur:', result); // Debug log
+
+      toast({
+        title: "Succès",
+        description: editingId !== null 
+          ? "Les données ont été mises à jour avec succès"
+          : "Les nouvelles données ont été enregistrées",
+      });
 
       await loadEntries();
       setEditingId(null);
     } catch (error) {
+      console.error('Erreur de soumission:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'opération",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'opération",
         variant: "destructive",
       });
     }
@@ -79,9 +84,13 @@ export default function Interface() {
 
   const handleDelete = async (id: number) => {
     try {
-      await fetch(`http://localhost/api/crud.php?id=${id}`, {
+      const response = await fetch(`http://localhost/api/crud.php?id=${id}`, {
         method: 'DELETE',
       });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression');
+      }
 
       toast({
         title: "Succès",
@@ -90,6 +99,7 @@ export default function Interface() {
 
       await loadEntries();
     } catch (error) {
+      console.error('Erreur de suppression:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer les données",
