@@ -43,8 +43,9 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     if (editingId && entries) {
       const entryToEdit = entries.find(entry => entry.id === editingId);
       if (entryToEdit) {
-        // Conversion du mois de string (ex: "Janvier") en number (1)
-        const monthNumber = monthsData.find(m => m.label === entryToEdit.mois)?.value || 1;
+        // On trouve d'abord le mois correspondant dans monthsData
+        const monthEntry = monthsData.find(m => m.label === entryToEdit.mois);
+        const monthNumber = monthEntry ? monthEntry.value : 1;
         
         form.reset({
           axeIT: entryToEdit.axeIT,
