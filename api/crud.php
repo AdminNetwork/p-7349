@@ -36,53 +36,23 @@ function getMonthLabel($value) {
 
 // Fonction pour calculer les champs
 function calculateFields($mois_numerique, $data) {
-    $budget = isset($data['budget']) && !is_null($data['budget']) ? floatval($data['budget']) : 0;
-    $montantReel = isset($data['montantReel']) && !is_null($data['montantReel']) ? floatval($data['montantReel']) : 0;
-    $atterissage = isset($data['atterissage']) && !is_null($data['atterissage']) ? floatval($data['atterissage']) : 0;
+    $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
+    $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
+    $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
 
-    // Log détaillé des données reçues
-    error_log("=== DÉBUT DU CALCUL DES CHAMPS ===");
-    error_log("Mois numérique pour calcul: $mois_numerique");
-    error_log("Budget: $budget");
-    error_log("Montant réel: $montantReel");
-    error_log("Atterrissage: $atterissage");
-
-    // Calcul des champs en gardant les valeurs non-nulles
-    $calculatedFields = [
+    return [
         'ecart_budget_reel' => $budget - $montantReel,
         'ecart_budget_atterissage' => $budget - $atterissage,
         'budget_ytd' => $budget !== 0 ? ($budget * $mois_numerique) / 12 : 0,
         'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois_numerique) / 12 : 0) - $montantReel
     ];
-
-    error_log("Champs calculés : " . print_r($calculatedFields, true));
-    return $calculatedFields;
 }
 
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $stmt = $pdo->query('SELECT 
-            id, axeIT, groupe2, contrePartie, libContrePartie, 
-            annee, mois, 
-            COALESCE(montantReel, 0) as montantReel,
-            COALESCE(budget, 0) as budget,
-            COALESCE(atterissage, 0) as atterissage,
-            COALESCE(plan, 0) as plan,
-            COALESCE(ecart_budget_reel, 0) as ecart_budget_reel,
-            COALESCE(ecart_budget_atterissage, 0) as ecart_budget_atterissage,
-            COALESCE(budget_ytd, 0) as budget_ytd,
-            COALESCE(budget_vs_reel_ytd, 0) as budget_vs_reel_ytd
-            FROM budget_entries');
+        $stmt = $pdo->query('SELECT * FROM budget_entries');
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Convertir les valeurs numériques des mois en libellés lors de la récupération
-        foreach ($results as &$row) {
-            if (isset($row['mois'])) {
-                $row['mois'] = getMonthLabel($row['mois']);
-            }
-        }
-        
         echo json_encode($results);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -93,56 +63,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // Ajouter une nouvelle entrée
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        error_log("=== DÉBUT DE L'INSERTION ===");
+        $data = json_decode(file_get_contents('php://input'), true);
         
-        $rawData = file_get_contents('php://input');
-        error_log("Données brutes reçues: " . $rawData);
-        
-        $data = json_decode($rawData, true);
-        error_log("Données décodées: " . print_r($data, true));
-
-        // Garder la valeur numérique pour les calculs
+        // Conversion du mois numérique en libellé
         $mois_numerique = intval($data['mois']);
-        // Convertir en libellé pour le stockage en utilisant la fonction getMonthLabel
-        $data['mois'] = getMonthLabel($mois_numerique);
+        $mois_libelle = getMonthLabel($mois_numerique);
         
-        error_log("Mois converti en libellé: " . $data['mois']);
-        
-        // Convertir les valeurs numériques potentiellement NULL en 0
-        foreach ($data as $key => $value) {
-            if (in_array($key, ['montantReel', 'budget', 'atterissage', 'plan']) && 
-                ($value === null || !is_numeric($value))) {
-                $data[$key] = 0;
-            }
-        }
-        
+        // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
         
-        $params = array_merge($data, $calculatedFields);
-        
-        error_log("Paramètres finaux pour l'insertion: " . print_r($params, true));
-        
         $sql = "INSERT INTO budget_entries (
-                axeIT, groupe2, contrePartie, libContrePartie, 
-                annee, mois, montantReel, budget, atterissage, plan,
-                ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
-                ) VALUES (
-                :axeIT, :groupe2, :contrePartie, :libContrePartie, 
-                :annee, :mois, :montantReel, :budget, :atterissage, :plan,
-                :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
-                )";
+            axeIT, groupe2, contrePartie, libContrePartie, 
+            annee, mois, montantReel, budget, atterissage, plan,
+            ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
+        ) VALUES (
+            :axeIT, :groupe2, :contrePartie, :libContrePartie,
+            :annee, :mois, :montantReel, :budget, :atterissage, :plan,
+            :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
+        )";
         
-        error_log("SQL préparé: " . $sql);
         $stmt = $pdo->prepare($sql);
         
-        error_log("Exécution avec les paramètres: " . print_r($params, true));
+        $params = [
+            'axeIT' => $data['axeIT'],
+            'groupe2' => $data['groupe2'],
+            'contrePartie' => $data['contrePartie'],
+            'libContrePartie' => $data['libContrePartie'],
+            'annee' => $data['annee'],
+            'mois' => $mois_libelle,
+            'montantReel' => $data['montantReel'] ?? 0,
+            'budget' => $data['budget'] ?? 0,
+            'atterissage' => $data['atterissage'] ?? 0,
+            'plan' => $data['plan'] ?? 0,
+            'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            'ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
+            'budget_ytd' => $calculatedFields['budget_ytd'],
+            'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
+        ];
+        
         $stmt->execute($params);
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         http_response_code(500);
-        error_log("ERREUR: " . $e->getMessage());
-        error_log("Stack trace: " . $e->getTraceAsString());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
@@ -153,42 +116,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'];
         
-        // Garder la valeur numérique pour les calculs
+        // Conversion du mois numérique en libellé
         $mois_numerique = intval($data['mois']);
-        // Convertir en libellé pour le stockage en utilisant la fonction getMonthLabel
-        $data['mois'] = getMonthLabel($mois_numerique);
+        $mois_libelle = getMonthLabel($mois_numerique);
         
-        error_log("Mois converti en libellé (PUT): " . $data['mois']);
-        
-        // Appliquer les mêmes conversions que pour l'insertion
-        foreach ($data as $key => $value) {
-            if (in_array($key, ['montantReel', 'budget', 'atterissage', 'plan']) && 
-                ($value === null || !is_numeric($value))) {
-                $data[$key] = 0;
-            }
-        }
-        
+        // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
         
         $sql = "UPDATE budget_entries SET 
-                axeIT = :axeIT,
-                groupe2 = :groupe2,
-                contrePartie = :contrePartie,
-                libContrePartie = :libContrePartie,
-                annee = :annee,
-                mois = :mois,
-                montantReel = :montantReel,
-                budget = :budget,
-                atterissage = :atterissage,
-                plan = :plan,
-                ecart_budget_reel = :ecart_budget_reel,
-                ecart_budget_atterissage = :ecart_budget_atterissage,
-                budget_ytd = :budget_ytd,
-                budget_vs_reel_ytd = :budget_vs_reel_ytd
-                WHERE id = :id";
+            axeIT = :axeIT,
+            groupe2 = :groupe2,
+            contrePartie = :contrePartie,
+            libContrePartie = :libContrePartie,
+            annee = :annee,
+            mois = :mois,
+            montantReel = :montantReel,
+            budget = :budget,
+            atterissage = :atterissage,
+            plan = :plan,
+            ecart_budget_reel = :ecart_budget_reel,
+            ecart_budget_atterissage = :ecart_budget_atterissage,
+            budget_ytd = :budget_ytd,
+            budget_vs_reel_ytd = :budget_vs_reel_ytd
+            WHERE id = :id";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(array_merge($data, $calculatedFields));
+        
+        $params = [
+            'id' => $id,
+            'axeIT' => $data['axeIT'],
+            'groupe2' => $data['groupe2'],
+            'contrePartie' => $data['contrePartie'],
+            'libContrePartie' => $data['libContrePartie'],
+            'annee' => $data['annee'],
+            'mois' => $mois_libelle,
+            'montantReel' => $data['montantReel'] ?? 0,
+            'budget' => $data['budget'] ?? 0,
+            'atterissage' => $data['atterissage'] ?? 0,
+            'plan' => $data['plan'] ?? 0,
+            'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            'ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
+            'budget_ytd' => $calculatedFields['budget_ytd'],
+            'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
+        ];
+        
+        $stmt->execute($params);
         
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
