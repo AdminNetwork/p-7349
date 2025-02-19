@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
         $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
         $plan = isset($data['plan']) ? floatval($data['plan']) : 0;
-        
+
         $sql = "INSERT INTO budget_entries (
             axeIT, groupe2, contrePartie, libContrePartie, 
             annee, annee_plan, mois, montantReel, budget, atterissage, plan,
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $pdo->prepare($sql);
         
-        $stmt->execute([
+        $params = [
             ':axeIT' => $data['axeIT'],
             ':groupe2' => $data['groupe2'],
             ':contrePartie' => $data['contrePartie'],
@@ -111,7 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
             ':budget_ytd' => $calculatedFields['budget_ytd'],
             ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
-        ]);
+        ];
+        
+        $stmt->execute($params);
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
     } catch (Exception $e) {
@@ -153,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         
         $stmt = $pdo->prepare($sql);
         
-        $stmt->execute([
+        $params = [
             ':id' => $data['id'],
             ':axeIT' => $data['axeIT'],
             ':groupe2' => $data['groupe2'],
@@ -170,7 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             ':ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
             ':budget_ytd' => $calculatedFields['budget_ytd'],
             ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
-        ]);
+        ];
+        
+        $stmt->execute($params);
         
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
