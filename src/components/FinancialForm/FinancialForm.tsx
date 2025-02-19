@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
-import { monthsData, yearRange, formSchema } from "./formConfig";
+import { monthsData, yearRange, planYearRange, formSchema } from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
 import { useEffect } from "react";
 
@@ -29,6 +30,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
       contrePartie: "",
       libContrePartie: "",
       annee: currentDate.getFullYear(),
+      annee_plan: currentDate.getFullYear() + 1,
       mois: currentDate.getMonth() + 1,
       montantReel: undefined,
       budget: undefined,
@@ -37,22 +39,20 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     },
   });
 
-  // Effet pour pré-remplir le formulaire lors de la modification
   useEffect(() => {
     if (editingId && entries) {
       const entryToEdit = entries.find(entry => entry.id === editingId);
       if (entryToEdit) {
-        // On trouve d'abord le mois correspondant dans monthsData
         const monthEntry = monthsData.find(m => m.label === entryToEdit.mois);
         const monthNumber = monthEntry ? monthEntry.value : 1;
         
-        // Conversion explicite des valeurs numériques
         const formData = {
           axeIT: entryToEdit.axeIT,
           groupe2: entryToEdit.groupe2,
           contrePartie: entryToEdit.contrePartie,
           libContrePartie: entryToEdit.libContrePartie,
           annee: Number(entryToEdit.annee),
+          annee_plan: Number(entryToEdit.annee_plan),
           mois: monthNumber,
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
@@ -140,6 +140,37 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
                   </FormControl>
                   <SelectContent className="bg-white">
                     {yearRange.map((year) => (
+                      <SelectItem
+                        key={year}
+                        value={year.toString()}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="annee_plan"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Année du Plan</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  value={field.value.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Sélectionnez une année pour le plan" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {planYearRange.map((year) => (
                       <SelectItem
                         key={year}
                         value={year.toString()}
