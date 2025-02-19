@@ -31,7 +31,7 @@ function getMonthLabel($value) {
             return $month['label'];
         }
     }
-    return "Janvier"; // Valeur par défaut
+    return "Janvier";
 }
 
 // Fonction pour calculer les champs
@@ -51,7 +51,7 @@ function calculateFields($mois_numerique, $data) {
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $stmt = $pdo->query('SELECT * FROM budget_entries');
+        $stmt = $pdo->query('SELECT * FROM budget_entries ORDER BY id DESC');
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode($results);
     } catch (PDOException $e) {
@@ -65,12 +65,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
         
+        // Validation des données reçues
+        if (!isset($data['mois']) || !isset($data['annee'])) {
+            throw new Exception('Données manquantes');
+        }
+
         // Conversion du mois numérique en libellé
         $mois_numerique = intval($data['mois']);
         $mois_libelle = getMonthLabel($mois_numerique);
         
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
+
+        // Préparation des valeurs par défaut
+        $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
+        $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
+        $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
+        $plan = isset($data['plan']) ? floatval($data['plan']) : 0;
         
         $sql = "INSERT INTO budget_entries (
             axeIT, groupe2, contrePartie, libContrePartie, 
@@ -81,30 +92,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             :annee, :mois, :montantReel, :budget, :atterissage, :plan,
             :ecart_budget_reel, :ecart_budget_atterissage, :budget_ytd, :budget_vs_reel_ytd
         )";
-        
+
         $stmt = $pdo->prepare($sql);
         
-        $params = [
-            'axeIT' => $data['axeIT'],
-            'groupe2' => $data['groupe2'],
-            'contrePartie' => $data['contrePartie'],
-            'libContrePartie' => $data['libContrePartie'],
-            'annee' => $data['annee'],
-            'mois' => $mois_libelle,
-            'montantReel' => $data['montantReel'] ?? 0,
-            'budget' => $data['budget'] ?? 0,
-            'atterissage' => $data['atterissage'] ?? 0,
-            'plan' => $data['plan'] ?? 0,
-            'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
-            'ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
-            'budget_ytd' => $calculatedFields['budget_ytd'],
-            'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
-        ];
-        
-        $stmt->execute($params);
+        $stmt->execute([
+            ':axeIT' => $data['axeIT'],
+            ':groupe2' => $data['groupe2'],
+            ':contrePartie' => $data['contrePartie'],
+            ':libContrePartie' => $data['libContrePartie'],
+            ':annee' => intval($data['annee']),
+            ':mois' => $mois_libelle,
+            ':montantReel' => $montantReel,
+            ':budget' => $budget,
+            ':atterissage' => $atterissage,
+            ':plan' => $plan,
+            ':ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            ':ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
+            ':budget_ytd' => $calculatedFields['budget_ytd'],
+            ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
+        ]);
         
         echo json_encode(['id' => $pdo->lastInsertId()]);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
     }
@@ -114,13 +123,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     try {
         $data = json_decode(file_get_contents('php://input'), true);
-        $id = $data['id'];
         
-        // Conversion du mois numérique en libellé
+        if (!isset($data['id'])) {
+            throw new Exception('ID manquant');
+        }
+
         $mois_numerique = intval($data['mois']);
         $mois_libelle = getMonthLabel($mois_numerique);
-        
-        // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
         
         $sql = "UPDATE budget_entries SET 
@@ -142,28 +151,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         
         $stmt = $pdo->prepare($sql);
         
-        $params = [
-            'id' => $id,
-            'axeIT' => $data['axeIT'],
-            'groupe2' => $data['groupe2'],
-            'contrePartie' => $data['contrePartie'],
-            'libContrePartie' => $data['libContrePartie'],
-            'annee' => $data['annee'],
-            'mois' => $mois_libelle,
-            'montantReel' => $data['montantReel'] ?? 0,
-            'budget' => $data['budget'] ?? 0,
-            'atterissage' => $data['atterissage'] ?? 0,
-            'plan' => $data['plan'] ?? 0,
-            'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
-            'ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
-            'budget_ytd' => $calculatedFields['budget_ytd'],
-            'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
-        ];
-        
-        $stmt->execute($params);
+        $stmt->execute([
+            ':id' => $data['id'],
+            ':axeIT' => $data['axeIT'],
+            ':groupe2' => $data['groupe2'],
+            ':contrePartie' => $data['contrePartie'],
+            ':libContrePartie' => $data['libContrePartie'],
+            ':annee' => intval($data['annee']),
+            ':mois' => $mois_libelle,
+            ':montantReel' => floatval($data['montantReel'] ?? 0),
+            ':budget' => floatval($data['budget'] ?? 0),
+            ':atterissage' => floatval($data['atterissage'] ?? 0),
+            ':plan' => floatval($data['plan'] ?? 0),
+            ':ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            ':ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'],
+            ':budget_ytd' => $calculatedFields['budget_ytd'],
+            ':budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
+        ]);
         
         echo json_encode(['success' => true]);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
     }
@@ -172,12 +179,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 // Supprimer une entrée
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     try {
-        $id = $_GET['id'];
-        $stmt = $pdo->prepare('DELETE FROM budget_entries WHERE id = ?');
-        $stmt->execute([$id]);
+        if (!isset($_GET['id'])) {
+            throw new Exception('ID manquant');
+        }
+        
+        $stmt = $pdo->prepare('DELETE FROM budget_entries WHERE id = :id');
+        $stmt->execute([':id' => $_GET['id']]);
         
         echo json_encode(['success' => true]);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
     }
