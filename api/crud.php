@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -73,30 +74,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Requête SQL avec tous les champs
         $sql = "INSERT INTO budget_entries (
-            axeIT1, axeIT2, typeDocument, referenceAffaire, fournisseur,
-            codeSociete, codeArticle, natureCommande, dateArriveeFacture, delaisPrevis,
-            dateFinContrat, contacts, annee, annee_plan, mois,
+            codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
+            typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
+            axeIT1, axeIT2, societeFacturee, annee, annee_plan, mois,
             montantReel, budget, regleEn,
             ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
 
         // Tableau avec tous les paramètres
         $params = [
-            $data['axeIT1'],
-            $data['axeIT2'],
-            $data['typeDocument'],
-            $data['referenceAffaire'],
-            $data['fournisseur'],
             $data['codeSociete'],
+            $data['fournisseur'],
             $data['codeArticle'],
             $data['natureCommande'],
             $data['dateArriveeFacture'],
+            $data['typeDocument'],
             floatval($data['delaisPrevis'] ?? 0),
             $data['dateFinContrat'],
+            $data['referenceAffaire'],
             $data['contacts'],
+            $data['axeIT1'],
+            $data['axeIT2'],
+            $data['societeFacturee'],
             intval($data['annee']),
             intval($data['annee_plan']),
             $mois_libelle,
@@ -137,9 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $calculatedFields = calculateFields($mois_numerique, $data);
         
         $sql = "UPDATE budget_entries SET 
-            axeIT1 = ?, axeIT2 = ?, typeDocument = ?, referenceAffaire = ?, fournisseur = ?,
-            codeSociete = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?, delaisPrevis = ?,
-            dateFinContrat = ?, contacts = ?, annee = ?, annee_plan = ?, mois = ?,
+            codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
+            typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
+            axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, annee_plan = ?, mois = ?,
             montantReel = ?, budget = ?, regleEn = ?,
             ecart_budget_reel = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
@@ -148,18 +150,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         error_log("SQL préparé: " . $sql);
         
         $params = [
-            $data['axeIT1'],
-            $data['axeIT2'],
-            $data['typeDocument'],
-            $data['referenceAffaire'],
-            $data['fournisseur'],
             $data['codeSociete'],
+            $data['fournisseur'],
             $data['codeArticle'],
             $data['natureCommande'],
             $data['dateArriveeFacture'],
+            $data['typeDocument'],
             floatval($data['delaisPrevis'] ?? 0),
             $data['dateFinContrat'],
+            $data['referenceAffaire'],
             $data['contacts'],
+            $data['axeIT1'],
+            $data['axeIT2'],
+            $data['societeFacturee'],
             intval($data['annee']),
             intval($data['annee_plan']),
             $mois_libelle,

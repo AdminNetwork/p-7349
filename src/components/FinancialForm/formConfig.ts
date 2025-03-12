@@ -1,3 +1,4 @@
+
 import * as z from "zod";
 
 const currentYear = new Date().getFullYear();
@@ -35,18 +36,19 @@ export const periodeOptions = [
 ];
 
 export const formSchema = z.object({
-  axeIT1: z.string().min(1, "L'Axe IT 1 est requis"),
-  axeIT2: z.string().min(1, "L'Axe IT 2 est requis"),
-  typeDocument: z.string().min(1, "Le Type de document est requis"),
-  referenceAffaire: z.string().min(1, "La Référence Affaire est requise"),
-  fournisseur: z.string().min(1, "Le fournisseur est requis"),
   codeSociete: z.string().min(1, "Le Code Société est requis"),
+  fournisseur: z.string().min(1, "Le fournisseur est requis"),
   codeArticle: z.string().min(1, "Le Code Article est requis"),
   natureCommande: z.string().min(1, "La Nature de la commande est requise"),
   dateArriveeFacture: z.string().min(1, "La Date d'arrivée de la facture est requise"),
+  typeDocument: z.string().min(1, "Le Type de document est requis"),
   delaisPrevis: z.number().min(0, "Le Délais préavis doit être positif"),
   dateFinContrat: z.string().min(1, "La Date fin de contrat est requise"),
+  referenceAffaire: z.string().min(1, "La Référence Affaire est requise"),
   contacts: z.string().min(1, "Les Contacts sont requis"),
+  axeIT1: z.string().min(1, "L'Axe IT 1 est requis"),
+  axeIT2: z.string().min(1, "L'Axe IT 2 est requis"),
+  societeFacturee: z.string().min(1, "La Société facturée est requise"),
   annee: z.number().min(startYear, `L'année doit être supérieure ou égale à ${startYear}`),
   annee_plan: z.number().min(currentYear + 1, "L'année du plan doit être une année future"),
   mois: z.number().min(1).max(12),

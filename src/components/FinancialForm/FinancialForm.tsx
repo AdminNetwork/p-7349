@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,18 +25,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      axeIT1: "",
-      axeIT2: "",
-      typeDocument: "",
-      referenceAffaire: "",
-      fournisseur: "",
       codeSociete: "",
+      fournisseur: "",
       codeArticle: "",
       natureCommande: "",
       dateArriveeFacture: "",
+      typeDocument: "",
       delaisPrevis: 0,
       dateFinContrat: "",
+      referenceAffaire: "",
       contacts: "",
+      axeIT1: "",
+      axeIT2: "",
+      societeFacturee: "",
       annee: currentDate.getFullYear(),
       annee_plan: currentDate.getFullYear() + 1,
       mois: currentDate.getMonth() + 1,
@@ -53,18 +55,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
         const monthNumber = monthEntry ? monthEntry.value : 1;
         
         const formData = {
-          axeIT1: entryToEdit.axeIT1 || "",
-          axeIT2: entryToEdit.axeIT2 || "",
-          typeDocument: entryToEdit.typeDocument || "",
-          referenceAffaire: entryToEdit.referenceAffaire || "",
-          fournisseur: entryToEdit.fournisseur || "",
           codeSociete: entryToEdit.codeSociete || "",
+          fournisseur: entryToEdit.fournisseur || "",
           codeArticle: entryToEdit.codeArticle || "",
           natureCommande: entryToEdit.natureCommande || "",
           dateArriveeFacture: entryToEdit.dateArriveeFacture || "",
+          typeDocument: entryToEdit.typeDocument || "",
           delaisPrevis: Number(entryToEdit.delaisPrevis) || 0,
           dateFinContrat: entryToEdit.dateFinContrat || "",
+          referenceAffaire: entryToEdit.referenceAffaire || "",
           contacts: entryToEdit.contacts || "",
+          axeIT1: entryToEdit.axeIT1 || "",
+          axeIT2: entryToEdit.axeIT2 || "",
+          societeFacturee: entryToEdit.societeFacturee || "",
           annee: Number(entryToEdit.annee),
           annee_plan: Number(entryToEdit.annee_plan),
           mois: monthNumber,
@@ -86,51 +89,12 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="axeIT1"
+            name="codeSociete"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Axe IT 1</FormLabel>
+                <FormLabel>Code Société</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez l'axe IT 1" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="axeIT2"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Axe IT 2</FormLabel>
-                <FormControl>
-                  <Input placeholder="Entrez l'axe IT 2" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="typeDocument"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type de document</FormLabel>
-                <FormControl>
-                  <Input placeholder="Entrez le type de document" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="referenceAffaire"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Référence Affaire</FormLabel>
-                <FormControl>
-                  <Input placeholder="Entrez la référence affaire" {...field} />
+                  <Input placeholder="Entrez le code société" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -144,19 +108,6 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
                 <FormLabel>Fournisseur</FormLabel>
                 <FormControl>
                   <Input placeholder="Entrez le fournisseur" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="codeSociete"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Code Société</FormLabel>
-                <FormControl>
-                  <Input placeholder="Entrez le code société" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -230,6 +181,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
+            name="typeDocument"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Type de document</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez le type de document" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="delaisPrevis"
             render={({ field }) => (
               <FormItem>
@@ -288,12 +252,64 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
+            name="referenceAffaire"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Référence Affaire</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez la référence affaire" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="contacts"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Contacts</FormLabel>
                 <FormControl>
                   <Input placeholder="Entrez les contacts" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="axeIT1"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Axe IT 1</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez l'axe IT 1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="axeIT2"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Axe IT 2</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez l'axe IT 2" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="societeFacturee"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Société facturée</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez la société facturée" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -473,4 +489,3 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     </Form>
   );
 }
-

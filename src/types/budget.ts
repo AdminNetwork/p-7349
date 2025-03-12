@@ -1,3 +1,4 @@
+
 export interface BudgetData {
   Axe_IT: string;
   Annee: string | number;
@@ -19,18 +20,19 @@ export interface DetailedPredictionData {
 
 export interface FinancialFormData {
   id?: number;
-  axeIT1: string;
-  axeIT2: string;
-  typeDocument: string;
-  referenceAffaire: string;
-  fournisseur: string;
   codeSociete: string;
+  fournisseur: string;
   codeArticle: string;
   natureCommande: string;
   dateArriveeFacture: string;
+  typeDocument: string;
   delaisPrevis: number;
   dateFinContrat: string;
+  referenceAffaire: string;
   contacts: string;
+  axeIT1: string;
+  axeIT2: string;
+  societeFacturee: string;
   annee: number;
   annee_plan: number;
   mois: string;
