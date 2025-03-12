@@ -20,16 +20,24 @@ export interface DetailedPredictionData {
 
 export interface FinancialFormData {
   id?: number;
-  axeIT: string;
-  groupe2: string;
-  contrePartie: string;
-  libContrePartie: string;
+  axeIT1: string;
+  axeIT2: string;
+  typeDocument: string;
+  referenceAffaire: string;
+  fournisseur: string;
+  codeSociete: string;
+  codeArticle: string;
+  natureCommande: string;
+  dateArriveeFacture: string;
+  delaisPrevis: number;
+  dateFinContrat: string;
+  contacts: string;
   annee: number;
   annee_plan: number;
   mois: string;
   montantReel: number;
   budget: number;
-  atterissage: number;
+  regleEn: number;
   plan: number;
   ecart_budget_reel: number;
   ecart_budget_atterissage: number;

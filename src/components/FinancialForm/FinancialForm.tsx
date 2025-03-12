@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
-import { monthsData, yearRange, planYearRange, formSchema } from "./formConfig";
+import { monthsData, yearRange, planYearRange, periodeOptions, formSchema } from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
 import { useEffect } from "react";
 
@@ -24,16 +25,24 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      axeIT: "",
-      groupe2: "",
-      contrePartie: "",
-      libContrePartie: "",
+      axeIT1: "",
+      axeIT2: "",
+      typeDocument: "",
+      referenceAffaire: "",
+      fournisseur: "",
+      codeSociete: "",
+      codeArticle: "",
+      natureCommande: "",
+      dateArriveeFacture: "",
+      delaisPrevis: 0,
+      dateFinContrat: "",
+      contacts: "",
       annee: currentDate.getFullYear(),
       annee_plan: currentDate.getFullYear() + 1,
       mois: currentDate.getMonth() + 1,
       montantReel: undefined,
       budget: undefined,
-      atterissage: undefined,
+      regleEn: undefined,
       plan: undefined,
     },
   });
@@ -46,16 +55,24 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
         const monthNumber = monthEntry ? monthEntry.value : 1;
         
         const formData = {
-          axeIT: entryToEdit.axeIT,
-          groupe2: entryToEdit.groupe2,
-          contrePartie: entryToEdit.contrePartie,
-          libContrePartie: entryToEdit.libContrePartie,
+          axeIT1: entryToEdit.axeIT1 || "",
+          axeIT2: entryToEdit.axeIT2 || "",
+          typeDocument: entryToEdit.typeDocument || "",
+          referenceAffaire: entryToEdit.referenceAffaire || "",
+          fournisseur: entryToEdit.fournisseur || "",
+          codeSociete: entryToEdit.codeSociete || "",
+          codeArticle: entryToEdit.codeArticle || "",
+          natureCommande: entryToEdit.natureCommande || "",
+          dateArriveeFacture: entryToEdit.dateArriveeFacture || "",
+          delaisPrevis: Number(entryToEdit.delaisPrevis) || 0,
+          dateFinContrat: entryToEdit.dateFinContrat || "",
+          contacts: entryToEdit.contacts || "",
           annee: Number(entryToEdit.annee),
           annee_plan: Number(entryToEdit.annee_plan),
           mois: monthNumber,
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
-          atterissage: Number(entryToEdit.atterissage) || undefined,
+          regleEn: Number(entryToEdit.regleEn) || undefined,
           plan: Number(entryToEdit.plan) || undefined,
         };
         
@@ -69,15 +86,15 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="axeIT"
+            name="axeIT1"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Axe IT</FormLabel>
+                <FormLabel>Axe IT 1</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez l'axe IT" {...field} />
+                  <Input placeholder="Entrez l'axe IT 1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -85,12 +102,12 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="groupe2"
+            name="axeIT2"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Groupe 2</FormLabel>
+                <FormLabel>Axe IT 2</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez le groupe 2" {...field} />
+                  <Input placeholder="Entrez l'axe IT 2" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,12 +115,12 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="contrePartie"
+            name="typeDocument"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contre-partie</FormLabel>
+                <FormLabel>Type de document</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez la contre-partie" {...field} />
+                  <Input placeholder="Entrez le type de document" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -111,17 +128,183 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="libContrePartie"
+            name="referenceAffaire"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Libellé Contre-partie</FormLabel>
+                <FormLabel>Référence Affaire</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez le libellé" {...field} />
+                  <Input placeholder="Entrez la référence affaire" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="fournisseur"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fournisseur</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez le fournisseur" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="codeSociete"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Code Société</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez le code société" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="codeArticle"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Code Article</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez le code article" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="natureCommande"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nature de la commande</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez la nature de la commande" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dateArriveeFacture"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date d'arrivée de la facture</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Sélectionnez une période" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {periodeOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                    {monthsData.map((month) => (
+                      <SelectItem
+                        key={`month-${month.value}`}
+                        value={month.label}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="delaisPrevis"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Délais préavis (jours)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dateFinContrat"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date fin de contrat</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Sélectionnez une période" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {periodeOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                    {monthsData.map((month) => (
+                      <SelectItem
+                        key={`month-${month.value}`}
+                        value={month.label}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contacts"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contacts</FormLabel>
+                <FormControl>
+                  <Input placeholder="Entrez les contacts" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="annee"
@@ -256,10 +439,10 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="atterissage"
+            name="regleEn"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Atterrissage</FormLabel>
+                <FormLabel>Réglé en</FormLabel>
                 <FormControl>
                   <Input
                     type="number"

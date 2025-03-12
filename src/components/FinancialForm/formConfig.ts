@@ -29,17 +29,31 @@ export const monthsData = [
   { value: 12, label: "Décembre" },
 ];
 
+export const periodeOptions = [
+  { value: "mensuel", label: "Mensuel" },
+  { value: "trimestriel", label: "Trimestriel" },
+  { value: "semestriel", label: "Semestriel" },
+];
+
 export const formSchema = z.object({
-  axeIT: z.string().min(1, "L'Axe IT est requis"),
-  groupe2: z.string().min(1, "Le Groupe 2 est requis"),
-  contrePartie: z.string().min(1, "La Contre-partie est requise"),
-  libContrePartie: z.string().min(1, "Le libellé de contre-partie est requis"),
+  axeIT1: z.string().min(1, "L'Axe IT 1 est requis"),
+  axeIT2: z.string().min(1, "L'Axe IT 2 est requis"),
+  typeDocument: z.string().min(1, "Le Type de document est requis"),
+  referenceAffaire: z.string().min(1, "La Référence Affaire est requise"),
+  fournisseur: z.string().min(1, "Le fournisseur est requis"),
+  codeSociete: z.string().min(1, "Le Code Société est requis"),
+  codeArticle: z.string().min(1, "Le Code Article est requis"),
+  natureCommande: z.string().min(1, "La Nature de la commande est requise"),
+  dateArriveeFacture: z.string().min(1, "La Date d'arrivée de la facture est requise"),
+  delaisPrevis: z.number().min(0, "Le Délais préavis doit être positif"),
+  dateFinContrat: z.string().min(1, "La Date fin de contrat est requise"),
+  contacts: z.string().min(1, "Les Contacts sont requis"),
   annee: z.number().min(startYear, `L'année doit être supérieure ou égale à ${startYear}`),
   annee_plan: z.number().min(currentYear + 1, "L'année du plan doit être une année future"),
   mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),
-  atterissage: z.number().optional(),
+  regleEn: z.number().optional(),
   plan: z.number().optional()
 });
 

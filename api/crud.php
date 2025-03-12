@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -37,11 +38,11 @@ function getMonthLabel($value) {
 function calculateFields($mois_numerique, $data) {
     $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
-    $atterissage = isset($data['atterissage']) ? floatval($data['atterissage']) : 0;
+    $regleEn = isset($data['regleEn']) ? floatval($data['regleEn']) : 0;
 
     return [
         'ecart_budget_reel' => $budget - $montantReel,
-        'ecart_budget_atterissage' => $budget - $atterissage,
+        'ecart_budget_atterissage' => $budget - $regleEn,
         'budget_ytd' => $budget !== 0 ? ($budget * $mois_numerique) / 12 : 0,
         'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois_numerique) / 12 : 0) - $montantReel
     ];
@@ -72,28 +73,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
 
-        // Requête SQL avec les 15 paramètres
+        // Requête SQL avec tous les champs
         $sql = "INSERT INTO budget_entries (
-            axeIT, groupe2, contrePartie, libContrePartie, 
-            annee, annee_plan, mois, montantReel, budget, atterissage, plan,
+            axeIT1, axeIT2, typeDocument, referenceAffaire, fournisseur,
+            codeSociete, codeArticle, natureCommande, dateArriveeFacture, delaisPrevis,
+            dateFinContrat, contacts, annee, annee_plan, mois,
+            montantReel, budget, regleEn, plan,
             ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
 
-        // Tableau avec les 15 paramètres
+        // Tableau avec tous les paramètres
         $params = [
-            $data['axeIT'],
-            $data['groupe2'],
-            $data['contrePartie'],
-            $data['libContrePartie'],
+            $data['axeIT1'],
+            $data['axeIT2'],
+            $data['typeDocument'],
+            $data['referenceAffaire'],
+            $data['fournisseur'],
+            $data['codeSociete'],
+            $data['codeArticle'],
+            $data['natureCommande'],
+            $data['dateArriveeFacture'],
+            floatval($data['delaisPrevis'] ?? 0),
+            $data['dateFinContrat'],
+            $data['contacts'],
             intval($data['annee']),
             intval($data['annee_plan']),
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
-            floatval($data['atterissage'] ?? 0),
+            floatval($data['regleEn'] ?? 0),
             floatval($data['plan'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
             $calculatedFields['ecart_budget_atterissage'],
@@ -130,27 +141,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $calculatedFields = calculateFields($mois_numerique, $data);
         
         $sql = "UPDATE budget_entries SET 
-            axeIT = ?, groupe2 = ?, contrePartie = ?, libContrePartie = ?,
-            annee = ?, annee_plan = ?, mois = ?, montantReel = ?, 
-            budget = ?, atterissage = ?, plan = ?,
-            ecart_budget_reel = ?, ecart_budget_atterissage = ?, 
-            budget_ytd = ?, budget_vs_reel_ytd = ?
+            axeIT1 = ?, axeIT2 = ?, typeDocument = ?, referenceAffaire = ?, fournisseur = ?,
+            codeSociete = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?, delaisPrevis = ?,
+            dateFinContrat = ?, contacts = ?, annee = ?, annee_plan = ?, mois = ?,
+            montantReel = ?, budget = ?, regleEn = ?, plan = ?,
+            ecart_budget_reel = ?, ecart_budget_atterissage = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
         $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
         
         $params = [
-            $data['axeIT'],
-            $data['groupe2'],
-            $data['contrePartie'],
-            $data['libContrePartie'],
+            $data['axeIT1'],
+            $data['axeIT2'],
+            $data['typeDocument'],
+            $data['referenceAffaire'],
+            $data['fournisseur'],
+            $data['codeSociete'],
+            $data['codeArticle'],
+            $data['natureCommande'],
+            $data['dateArriveeFacture'],
+            floatval($data['delaisPrevis'] ?? 0),
+            $data['dateFinContrat'],
+            $data['contacts'],
             intval($data['annee']),
             intval($data['annee_plan']),
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
-            floatval($data['atterissage'] ?? 0),
+            floatval($data['regleEn'] ?? 0),
             floatval($data['plan'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
             $calculatedFields['ecart_budget_atterissage'],

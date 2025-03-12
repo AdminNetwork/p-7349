@@ -41,8 +41,9 @@ export default function Interface() {
         ...values,
         montantReel: values.montantReel ?? 0,
         budget: values.budget ?? 0,
-        atterissage: values.atterissage ?? 0,
+        regleEn: values.regleEn ?? 0,
         plan: values.plan ?? 0,
+        delaisPrevis: values.delaisPrevis ?? 0
       };
 
       console.log('Données préparées:', preparedData); // Debug log
