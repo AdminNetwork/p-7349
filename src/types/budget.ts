@@ -1,4 +1,3 @@
-
 export interface BudgetData {
   Axe_IT: string;
   Annee: string | number;
@@ -38,16 +37,13 @@ export interface FinancialFormData {
   montantReel: number;
   budget: number;
   regleEn: number;
-  plan: number;
   ecart_budget_reel: number;
-  ecart_budget_atterissage: number;
   budget_ytd: number;
   budget_vs_reel_ytd: number;
 }
 
 export interface CalculatedFields {
   ecart_budget_reel: number;
-  ecart_budget_atterissage: number;
   budget_ytd: number;
   budget_vs_reel_ytd: number;
 }

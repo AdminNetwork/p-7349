@@ -1,4 +1,3 @@
-
 import * as z from "zod";
 
 const currentYear = new Date().getFullYear();
@@ -53,8 +52,7 @@ export const formSchema = z.object({
   mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),
-  regleEn: z.number().optional(),
-  plan: z.number().optional()
+  regleEn: z.number().optional()
 });
 
 export type FormSchema = z.infer<typeof formSchema>;

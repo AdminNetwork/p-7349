@@ -1,4 +1,3 @@
-
 <?php
 require_once 'config.php';
 
@@ -42,7 +41,6 @@ function calculateFields($mois_numerique, $data) {
 
     return [
         'ecart_budget_reel' => $budget - $montantReel,
-        'ecart_budget_atterissage' => $budget - $regleEn,
         'budget_ytd' => $budget !== 0 ? ($budget * $mois_numerique) / 12 : 0,
         'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois_numerique) / 12 : 0) - $montantReel
     ];
@@ -78,9 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             axeIT1, axeIT2, typeDocument, referenceAffaire, fournisseur,
             codeSociete, codeArticle, natureCommande, dateArriveeFacture, delaisPrevis,
             dateFinContrat, contacts, annee, annee_plan, mois,
-            montantReel, budget, regleEn, plan,
-            ecart_budget_reel, ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            montantReel, budget, regleEn,
+            ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
@@ -105,9 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
             floatval($data['regleEn'] ?? 0),
-            floatval($data['plan'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['ecart_budget_atterissage'],
             $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd']
         ];
@@ -144,8 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             axeIT1 = ?, axeIT2 = ?, typeDocument = ?, referenceAffaire = ?, fournisseur = ?,
             codeSociete = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?, delaisPrevis = ?,
             dateFinContrat = ?, contacts = ?, annee = ?, annee_plan = ?, mois = ?,
-            montantReel = ?, budget = ?, regleEn = ?, plan = ?,
-            ecart_budget_reel = ?, ecart_budget_atterissage = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
+            montantReel = ?, budget = ?, regleEn = ?,
+            ecart_budget_reel = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
         $stmt = $pdo->prepare($sql);
@@ -170,9 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
             floatval($data['regleEn'] ?? 0),
-            floatval($data['plan'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['ecart_budget_atterissage'],
             $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
