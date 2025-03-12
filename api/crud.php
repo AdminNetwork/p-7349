@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "INSERT INTO budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
-            axeIT1, axeIT2, societeFacturee, annee, annee_plan, mois,
+            axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,
             montantReel, budget, regleEn,
             ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['axeIT2'],
             $data['societeFacturee'],
             intval($data['annee']),
-            intval($data['annee_plan']),
+            $data['dateReglement'],
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $sql = "UPDATE budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
-            axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, annee_plan = ?, mois = ?,
+            axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,
             montantReel = ?, budget = ?, regleEn = ?,
             ecart_budget_reel = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $data['axeIT2'],
             $data['societeFacturee'],
             intval($data['annee']),
-            intval($data['annee_plan']),
+            $data['dateReglement'],
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),

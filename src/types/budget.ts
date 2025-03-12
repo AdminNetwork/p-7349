@@ -34,7 +34,7 @@ export interface FinancialFormData {
   axeIT2: string;
   societeFacturee: string;
   annee: number;
-  annee_plan: number;
+  dateReglement: string;
   mois: string;
   montantReel: number;
   budget: number;

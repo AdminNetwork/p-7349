@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
-import { monthsData, yearRange, planYearRange, periodeOptions, formSchema } from "./formConfig";
+import { monthsData, yearRange, periodeOptions, formSchema } from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
 import { useEffect } from "react";
 
@@ -39,7 +39,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
       axeIT2: "",
       societeFacturee: "",
       annee: currentDate.getFullYear(),
-      annee_plan: currentDate.getFullYear() + 1,
+      dateReglement: "",
       mois: currentDate.getMonth() + 1,
       montantReel: undefined,
       budget: undefined,
@@ -69,7 +69,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           axeIT2: entryToEdit.axeIT2 || "",
           societeFacturee: entryToEdit.societeFacturee || "",
           annee: Number(entryToEdit.annee),
-          annee_plan: Number(entryToEdit.annee_plan),
+          dateReglement: entryToEdit.dateReglement || "",
           mois: monthNumber,
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
@@ -351,27 +351,36 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="annee_plan"
+            name="dateReglement"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Année du Plan</FormLabel>
+                <FormLabel>Date du règlement</FormLabel>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value))}
-                  value={field.value.toString()}
+                  onValueChange={field.onChange}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Sélectionnez une année pour le plan" />
+                      <SelectValue placeholder="Sélectionnez une période" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white">
-                    {planYearRange.map((year) => (
+                    {periodeOptions.map((option) => (
                       <SelectItem
-                        key={year}
-                        value={year.toString()}
+                        key={option.value}
+                        value={option.value}
                         className="hover:bg-muted text-gray-900 hover:text-gray-900"
                       >
-                        {year}
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                    {monthsData.map((month) => (
+                      <SelectItem
+                        key={`month-${month.value}`}
+                        value={month.label}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {month.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

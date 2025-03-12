@@ -50,7 +50,7 @@ export const formSchema = z.object({
   axeIT2: z.string().min(1, "L'Axe IT 2 est requis"),
   societeFacturee: z.string().min(1, "La Société facturée est requise"),
   annee: z.number().min(startYear, `L'année doit être supérieure ou égale à ${startYear}`),
-  annee_plan: z.number().min(currentYear + 1, "L'année du plan doit être une année future"),
+  dateReglement: z.string().min(1, "La Date du règlement est requise"),
   mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),
