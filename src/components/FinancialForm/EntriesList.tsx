@@ -21,9 +21,9 @@ export function EntriesList({ entries, onEdit, onDelete }: EntriesListProps) {
           {entries.map((entry) => (
             <div key={entry.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div>
-                <p className="font-medium">{entry.axeIT}</p>
+                <p className="font-medium">{entry.axeIT1}</p>
                 <p className="text-sm text-muted-foreground">
-                  {entry.annee} - {entry.contrePartie}
+                  {entry.annee} - {entry.fournisseur}
                 </p>
               </div>
               <div className="flex gap-2">

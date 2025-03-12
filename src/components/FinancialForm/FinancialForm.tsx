@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,7 +42,6 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
       montantReel: undefined,
       budget: undefined,
       regleEn: undefined,
-      plan: undefined,
     },
   });
 
@@ -73,7 +71,6 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
           regleEn: Number(entryToEdit.regleEn) || undefined,
-          plan: Number(entryToEdit.plan) || undefined,
         };
         
         form.reset(formData);
@@ -400,7 +397,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="montantReel"
@@ -455,25 +452,6 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="plan"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Plan</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                    disabled={formValues.annee_plan <= new Date().getFullYear()}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <CalculatedFields formValues={formValues} />
@@ -495,3 +473,4 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     </Form>
   );
 }
+

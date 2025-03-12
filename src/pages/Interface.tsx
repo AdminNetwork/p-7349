@@ -42,7 +42,6 @@ export default function Interface() {
         montantReel: values.montantReel ?? 0,
         budget: values.budget ?? 0,
         regleEn: values.regleEn ?? 0,
-        plan: values.plan ?? 0,
         delaisPrevis: values.delaisPrevis ?? 0
       };
 
