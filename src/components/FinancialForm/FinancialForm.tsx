@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
-import { monthsData, yearRange, periodeOptions, formSchema } from "./formConfig";
+import { monthsData, yearRange, periodeOptions, formSchema, requiredFieldErrorColor } from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
 import { useEffect } from "react";
 
@@ -82,6 +82,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
   }, [editingId, entries, form]);
 
   const formValues = form.watch();
+  const formState = form.formState;
 
   return (
     <Form {...form}>
@@ -92,9 +93,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="codeSociete"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Code Société</FormLabel>
+                <FormLabel>Code Société*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez le code société" {...field} />
+                  <Input 
+                    placeholder="Entrez le code société" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.codeSociete ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.codeSociete ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,9 +113,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="fournisseur"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fournisseur</FormLabel>
+                <FormLabel>Fournisseur*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez le fournisseur" {...field} />
+                  <Input 
+                    placeholder="Entrez le fournisseur" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.fournisseur ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.fournisseur ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,9 +133,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="codeArticle"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Code Article</FormLabel>
+                <FormLabel>Code Article*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez le code article" {...field} />
+                  <Input 
+                    placeholder="Entrez le code article" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.codeArticle ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.codeArticle ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -131,9 +153,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="natureCommande"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nature de la commande</FormLabel>
+                <FormLabel>Nature de la commande*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez la nature de la commande" {...field} />
+                  <Input 
+                    placeholder="Entrez la nature de la commande" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.natureCommande ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.natureCommande ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -144,13 +173,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="dateArriveeFacture"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date d'arrivée de la facture</FormLabel>
+                <FormLabel>Date d'arrivée de la facture*</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.dateArriveeFacture ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.dateArriveeFacture ? "2px" : undefined
+                      }}
+                    >
                       <SelectValue placeholder="Sélectionnez une période" />
                     </SelectTrigger>
                   </FormControl>
@@ -184,9 +219,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="typeDocument"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type de document</FormLabel>
+                <FormLabel>Type de document*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez le type de document" {...field} />
+                  <Input 
+                    placeholder="Entrez le type de document" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.typeDocument ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.typeDocument ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -197,13 +239,17 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="delaisPrevis"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Délais préavis (jours)</FormLabel>
+                <FormLabel>Délais préavis (jours)*</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     placeholder="0"
                     {...field}
                     onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                    style={{ 
+                      borderColor: formState.errors.delaisPrevis ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.delaisPrevis ? "2px" : undefined
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -215,13 +261,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="dateFinContrat"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date fin de contrat</FormLabel>
+                <FormLabel>Date fin de contrat*</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.dateFinContrat ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.dateFinContrat ? "2px" : undefined
+                      }}
+                    >
                       <SelectValue placeholder="Sélectionnez une période" />
                     </SelectTrigger>
                   </FormControl>
@@ -255,9 +307,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="referenceAffaire"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Référence Affaire</FormLabel>
+                <FormLabel>Référence Affaire*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez la référence affaire" {...field} />
+                  <Input 
+                    placeholder="Entrez la référence affaire" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.referenceAffaire ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.referenceAffaire ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -268,9 +327,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="contacts"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contacts</FormLabel>
+                <FormLabel>Contacts*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez les contacts" {...field} />
+                  <Input 
+                    placeholder="Entrez les contacts" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.contacts ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.contacts ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -281,9 +347,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="axeIT1"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Axe IT 1</FormLabel>
+                <FormLabel>Axe IT 1*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez l'axe IT 1" {...field} />
+                  <Input 
+                    placeholder="Entrez l'axe IT 1" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.axeIT1 ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.axeIT1 ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -294,9 +367,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="axeIT2"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Axe IT 2</FormLabel>
+                <FormLabel>Axe IT 2*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez l'axe IT 2" {...field} />
+                  <Input 
+                    placeholder="Entrez l'axe IT 2" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.axeIT2 ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.axeIT2 ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -307,9 +387,16 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="societeFacturee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Société facturée</FormLabel>
+                <FormLabel>Société facturée*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Entrez la société facturée" {...field} />
+                  <Input 
+                    placeholder="Entrez la société facturée" 
+                    {...field} 
+                    style={{ 
+                      borderColor: formState.errors.societeFacturee ? requiredFieldErrorColor : undefined,
+                      borderWidth: formState.errors.societeFacturee ? "2px" : undefined
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -323,13 +410,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="annee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Année</FormLabel>
+                <FormLabel>Année*</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(parseInt(value))}
                   value={field.value.toString()}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.annee ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.annee ? "2px" : undefined
+                      }}
+                    >
                       <SelectValue placeholder="Sélectionnez une année" />
                     </SelectTrigger>
                   </FormControl>
@@ -354,13 +447,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="mois"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Mois</FormLabel>
+                <FormLabel>Mois*</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(parseInt(value))}
                   value={field.value.toString()}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.mois ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.mois ? "2px" : undefined
+                      }}
+                    >
                       <SelectValue placeholder="Sélectionnez un mois" />
                     </SelectTrigger>
                   </FormControl>
@@ -385,13 +484,19 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="dateReglement"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date du règlement</FormLabel>
+                <FormLabel>Date du règlement*</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.dateReglement ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.dateReglement ? "2px" : undefined
+                      }}
+                    >
                       <SelectValue placeholder="Sélectionnez une période" />
                     </SelectTrigger>
                   </FormControl>
@@ -498,4 +603,3 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     </Form>
   );
 }
-

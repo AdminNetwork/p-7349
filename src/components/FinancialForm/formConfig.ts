@@ -36,6 +36,9 @@ export const periodeOptions = [
   { value: "semestriel", label: "Semestriel" },
 ];
 
+// Définition de la couleur pour les champs obligatoires en erreur
+export const requiredFieldErrorColor = "#ea384c";
+
 export const formSchema = z.object({
   codeSociete: z.string().min(1, "Le Code Société est requis"),
   fournisseur: z.string().min(1, "Le fournisseur est requis"),
@@ -59,4 +62,3 @@ export const formSchema = z.object({
 });
 
 export type FormSchema = z.infer<typeof formSchema>;
-
