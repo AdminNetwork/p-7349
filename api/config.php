@@ -5,6 +5,11 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
+// Activation des logs d'erreur PHP pour le débogage
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
+
 // SQL Server Connection Parameters
 $host = 'svinmssql001.groupedehon.com';
 $port = '1433';
