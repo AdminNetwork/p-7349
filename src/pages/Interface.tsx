@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +29,7 @@ export default function Interface() {
       setError(errorMessage);
       toast({
         title: "Erreur de connexion",
-        description: "Impossible de récupérer les données. Vérifiez que votre API Node.js est en cours d'exécution.",
+        description: "Impossible de récupérer les données. Vérifiez que votre API est accessible.",
         variant: "destructive",
       });
     } finally {
@@ -124,7 +123,7 @@ export default function Interface() {
           <strong className="font-bold">Erreur de connexion!</strong>
           <span className="block sm:inline"> {error}</span>
           <p className="mt-2">
-            Assurez-vous que votre serveur Node.js est en cours d'exécution et accessible.
+            Assurez-vous que votre service API est accessible.
           </p>
         </div>
       )}
