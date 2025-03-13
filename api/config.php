@@ -12,7 +12,7 @@ error_reporting(E_ALL);
 
 // MySQL Connection Parameters
 $host = 'localhost';
-$db   = 'kevin_api';
+$db   = 'budget_entries';
 $user = 'root';
 $pass = ''; 
 $charset = 'utf8mb4';
