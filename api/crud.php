@@ -50,10 +50,21 @@ function calculateFields($mois_numerique, $data) {
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $stmt = $pdo->query('SELECT * FROM budget_entries ORDER BY id DESC');
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = "SELECT * FROM DataWarehouse.budget_entries ORDER BY id DESC";
+        $stmt = sqlsrv_query($conn, $sql);
+        
+        if ($stmt === false) {
+            throw new Exception("Error in query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+        }
+        
+        $results = array();
+        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+            $results[] = $row;
+        }
+        
         echo json_encode($results);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
+        error_log("GET Error: " . $e->getMessage());
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
     }
@@ -73,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $calculatedFields = calculateFields($mois_numerique, $data);
 
         // Requête SQL avec tous les champs
-        $sql = "INSERT INTO budget_entries (
+        $sql = "INSERT INTO DataWarehouse.budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
             axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,
@@ -81,11 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $pdo->prepare($sql);
-        error_log("SQL préparé: " . $sql);
-
-        // Tableau avec tous les paramètres
-        $params = [
+        $params = array(
             $data['codeSociete'],
             $data['fournisseur'],
             $data['codeArticle'],
@@ -108,12 +115,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $calculatedFields['ecart_budget_reel'],
             $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd']
-        ];
+        );
 
         error_log("Paramètres pour l'exécution: " . print_r($params, true));
         
-        $stmt->execute($params);
-        $newId = $pdo->lastInsertId();
+        $stmt = sqlsrv_query($conn, $sql, $params);
+        if ($stmt === false) {
+            throw new Exception("Error in insert query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+        }
+        
+        // Get the ID of the newly inserted record (SQL Server specific)
+        $identitySql = "SELECT SCOPE_IDENTITY() AS ID";
+        $identityStmt = sqlsrv_query($conn, $identitySql);
+        if ($identityStmt === false) {
+            throw new Exception("Error getting inserted ID: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+        }
+        $newId = 0;
+        if (sqlsrv_fetch($identityStmt)) {
+            $newId = sqlsrv_get_field($identityStmt, 0);
+        }
+        
         echo json_encode(['success' => true, 'id' => $newId]);
         
     } catch (Exception $e) {
@@ -138,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $mois_libelle = getMonthLabel($mois_numerique);
         $calculatedFields = calculateFields($mois_numerique, $data);
         
-        $sql = "UPDATE budget_entries SET 
+        $sql = "UPDATE DataWarehouse.budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
             axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,
@@ -146,10 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             ecart_budget_reel = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
-        $stmt = $pdo->prepare($sql);
-        error_log("SQL préparé: " . $sql);
-        
-        $params = [
+        $params = array(
             $data['codeSociete'],
             $data['fournisseur'],
             $data['codeArticle'],
@@ -173,11 +191,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
-        ];
+        );
         
         error_log("Paramètres pour l'exécution: " . print_r($params, true));
         
-        $stmt->execute($params);
+        $stmt = sqlsrv_query($conn, $sql, $params);
+        if ($stmt === false) {
+            throw new Exception("Error in update query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+        }
+        
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         http_response_code(500);
@@ -194,8 +216,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
             throw new Exception('ID manquant');
         }
         
-        $stmt = $pdo->prepare('DELETE FROM budget_entries WHERE id = ?');
-        $stmt->execute([$_GET['id']]);
+        $sql = "DELETE FROM DataWarehouse.budget_entries WHERE id = ?";
+        $params = array($_GET['id']);
+        
+        $stmt = sqlsrv_query($conn, $sql, $params);
+        if ($stmt === false) {
+            throw new Exception("Error in delete query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+        }
         
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
