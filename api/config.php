@@ -6,7 +6,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
 $host = 'localhost';
-$db   = 'kevin_api';
+$db   = 'budget_entries'; // Changé de 'kevin_api' à 'budget_entries'
 $user = 'root';
 $pass = ''; // Mot de passe vide comme indiqué
 $charset = 'utf8mb4';
