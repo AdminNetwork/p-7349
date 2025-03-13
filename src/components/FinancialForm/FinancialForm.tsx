@@ -384,7 +384,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="mois"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Mois</FormLabel>
+                <FormLabel>Mois YTD</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(parseInt(value))}
                   value={field.value.toString()}

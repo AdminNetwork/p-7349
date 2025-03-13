@@ -1,4 +1,3 @@
-
 import * as z from "zod";
 
 const currentYear = new Date().getFullYear();
@@ -30,6 +29,7 @@ export const monthsData = [
 ];
 
 export const periodeOptions = [
+  { value: "bimestriel", label: "Bimestriel" },
   { value: "mensuel", label: "Mensuel" },
   { value: "trimestriel", label: "Trimestriel" },
   { value: "semestriel", label: "Semestriel" },
