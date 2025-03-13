@@ -38,7 +38,7 @@ function getMonthLabel($value) {
 function calculateFields($mois_numerique, $data) {
     $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
-    $regleEn = isset($data['regleEn']) ? floatval($data['regleEn']) : 0;
+    $montantReglement = isset($data['montantReglement']) ? floatval($data['montantReglement']) : 0;
 
     return [
         'ecart_budget_reel' => $budget - $montantReel,

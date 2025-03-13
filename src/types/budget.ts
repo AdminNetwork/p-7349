@@ -38,7 +38,7 @@ export interface FinancialFormData {
   mois: string;
   montantReel: number;
   budget: number;
-  regleEn: number;
+  montantReglement: number; // Renamed from regleEn
   ecart_budget_reel: number;
   budget_vs_reel_ytd: number;
 }

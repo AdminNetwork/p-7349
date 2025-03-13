@@ -36,7 +36,7 @@ function updateEntry($conn, $data) {
             'mois' => $mois_libelle,
             'montantReel' => floatval($data['montantReel'] ?? 0),
             'budget' => floatval($data['budget'] ?? 0),
-            'regleEn' => floatval($data['regleEn'] ?? 0),
+            'montantReglement' => floatval($data['montantReglement'] ?? 0),
             'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
             'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd'],
             'id' => $data['id']
@@ -47,7 +47,7 @@ function updateEntry($conn, $data) {
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
             axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,
-            montantReel = ?, budget = ?, regleEn = ?,
+            montantReel = ?, budget = ?, montantReglement = ?,
             ecart_budget_reel = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
@@ -70,7 +70,7 @@ function updateEntry($conn, $data) {
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
-            floatval($data['regleEn'] ?? 0),
+            floatval($data['montantReglement'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
