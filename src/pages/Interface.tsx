@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +40,7 @@ export default function Interface() {
         ...values,
         montantReel: values.montantReel ?? 0,
         budget: values.budget ?? 0,
-        regleEn: values.regleEn ?? 0,
+        montantReglement: values.montantReglement ?? 0,
         delaisPrevis: values.delaisPrevis ?? 0
       };
 

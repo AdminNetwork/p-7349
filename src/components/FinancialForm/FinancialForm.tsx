@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,7 +42,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
       mois: currentDate.getMonth() + 1,
       montantReel: undefined,
       budget: undefined,
-      regleEn: undefined,
+      montantReglement: undefined,
     },
   });
 
@@ -73,7 +72,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           mois: monthNumber,
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
-          regleEn: Number(entryToEdit.regleEn) || undefined,
+          montantReglement: Number(entryToEdit.montantReglement) || undefined,
         };
         
         form.reset(formData);
@@ -455,7 +454,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="regleEn"
+            name="montantReglement"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Montant du règlement</FormLabel>
