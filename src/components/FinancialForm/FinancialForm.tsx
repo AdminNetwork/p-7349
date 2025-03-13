@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -42,7 +43,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
       mois: currentDate.getMonth() + 1,
       montantReel: undefined,
       budget: undefined,
-      montantReglement: undefined,
+      regleEn: undefined,
     },
   });
 
@@ -72,7 +73,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           mois: monthNumber,
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
-          montantReglement: Number(entryToEdit.montantReglement) || undefined,
+          regleEn: Number(entryToEdit.regleEn) || undefined,
         };
         
         form.reset(formData);
@@ -316,7 +317,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="annee"
@@ -340,6 +341,46 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
                         className="hover:bg-muted text-gray-900 hover:text-gray-900"
                       >
                         {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dateReglement"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date du règlement</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Sélectionnez une période" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {periodeOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                    {monthsData.map((month) => (
+                      <SelectItem
+                        key={`month-${month.value}`}
+                        value={month.label}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {month.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -381,41 +422,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="dateReglement"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date du règlement</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Sélectionnez une année" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white">
-                    {yearRange.map((year) => (
-                      <SelectItem
-                        key={`year-${year}`}
-                        value={year.toString()}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="montantReel"
@@ -454,10 +461,10 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
-            name="montantReglement"
+            name="regleEn"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Montant du règlement</FormLabel>
+                <FormLabel>Réglé en</FormLabel>
                 <FormControl>
                   <Input
                     type="number"

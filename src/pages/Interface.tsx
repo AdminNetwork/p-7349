@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,35 +6,27 @@ import type { FinancialFormData } from "@/types/budget";
 import { FinancialForm } from "@/components/FinancialForm/FinancialForm";
 import { EntriesList } from "@/components/FinancialForm/EntriesList";
 import type { FormSchema } from "@/components/FinancialForm/formConfig";
-import { apiService } from "@/services/apiService";
 
 export default function Interface() {
   const { toast } = useToast();
   const [entries, setEntries] = useState<FinancialFormData[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fonction pour récupérer les données
   const loadEntries = async () => {
-    setIsLoading(true);
-    setError(null);
     try {
-      console.log("Chargement des données...");
-      const data = await apiService.getEntries();
-      console.log("Données récupérées:", data);
+      const response = await fetch('http://localhost/api/crud.php');
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des données');
+      }
+      const data = await response.json();
       setEntries(data);
-    } catch (err) {
-      console.error('Erreur de chargement:', err);
-      const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-      setError(errorMessage);
+    } catch (error) {
+      console.error('Erreur de chargement:', error);
       toast({
-        title: "Erreur de connexion",
-        description: "Impossible de récupérer les données. Vérifiez que votre API est accessible.",
+        title: "Erreur",
+        description: "Impossible de charger les données",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -43,46 +36,52 @@ export default function Interface() {
 
   const handleSubmit = async (values: FormSchema) => {
     try {
-      setIsLoading(true);
-      
       // Initialisation des champs numériques à 0 s'ils sont undefined
       const preparedData = {
         ...values,
         montantReel: values.montantReel ?? 0,
         budget: values.budget ?? 0,
-        montantReglement: values.montantReglement ?? 0,
+        regleEn: values.regleEn ?? 0,
         delaisPrevis: values.delaisPrevis ?? 0
       };
 
-      console.log('Données préparées:', preparedData);
+      console.log('Données préparées:', preparedData); // Debug log
 
-      if (editingId !== null) {
-        // Mise à jour d'une entrée existante
-        await apiService.updateEntry(editingId, preparedData);
-        toast({
-          title: "Succès",
-          description: "Les données ont été mises à jour avec succès",
-        });
-      } else {
-        // Insertion d'une nouvelle entrée
-        await apiService.addEntry(preparedData);
-        toast({
-          title: "Succès",
-          description: "Les nouvelles données ont été enregistrées",
-        });
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const submitData = editingId !== null ? { ...preparedData, id: editingId } : preparedData;
+
+      const response = await fetch('http://localhost/api/crud.php', {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la soumission');
       }
+
+      const result = await response.json();
+      console.log('Réponse du serveur:', result); // Debug log
+
+      toast({
+        title: "Succès",
+        description: editingId !== null 
+          ? "Les données ont été mises à jour avec succès"
+          : "Les nouvelles données ont été enregistrées",
+      });
 
       await loadEntries();
       setEditingId(null);
-    } catch (err) {
-      console.error('Erreur de soumission:', err);
+    } catch (error) {
+      console.error('Erreur de soumission:', error);
       toast({
         title: "Erreur",
-        description: err instanceof Error ? err.message : "Une erreur est survenue lors de l'opération",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'opération",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -94,9 +93,13 @@ export default function Interface() {
 
   const handleDelete = async (id: number) => {
     try {
-      setIsLoading(true);
-      
-      await apiService.deleteEntry(id);
+      const response = await fetch(`http://localhost/api/crud.php?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression');
+      }
 
       toast({
         title: "Succès",
@@ -104,36 +107,18 @@ export default function Interface() {
       });
 
       await loadEntries();
-    } catch (err) {
-      console.error('Erreur de suppression:', err);
+    } catch (error) {
+      console.error('Erreur de suppression:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer les données",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Erreur de connexion!</strong>
-          <span className="block sm:inline"> {error}</span>
-          <p className="mt-2">
-            Assurez-vous que votre service API est accessible.
-          </p>
-        </div>
-      )}
-      
-      {isLoading && (
-        <div className="flex justify-center items-center p-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      )}
-      
       <Card>
         <CardHeader>
           <CardTitle>Gestion des Données Financières</CardTitle>

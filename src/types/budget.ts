@@ -38,12 +38,14 @@ export interface FinancialFormData {
   mois: string;
   montantReel: number;
   budget: number;
-  montantReglement: number;
+  regleEn: number;
   ecart_budget_reel: number;
+  budget_ytd: number;
   budget_vs_reel_ytd: number;
 }
 
 export interface CalculatedFields {
   ecart_budget_reel: number;
+  budget_ytd: number;
   budget_vs_reel_ytd: number;
 }
