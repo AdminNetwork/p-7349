@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
 
-        // Log des données avant exécution de la requête
+        // Préparation des paramètres pour le log
         $paramsToLog = [
             'codeSociete' => $data['codeSociete'] ?? '',
             'fournisseur' => $data['fournisseur'] ?? '',
@@ -110,13 +110,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
 
-        // Requête SQL avec tous les champs
+        // Requête SQL corrigée pour correspondre exactement aux colonnes de la table
         $sql = "INSERT INTO DataWarehouse.budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
             axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,
-            montantReel, budget, regleEn,
-            ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
+            montantReel, budget, regleEn, ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $params = array(
@@ -143,6 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd']
         );
+        
+        error_log("SQL: " . $sql);
+        error_log("Nombre de paramètres: " . count($params));
         
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {
@@ -247,6 +249,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
         );
+        
+        error_log("SQL Update: " . $sql);
+        error_log("Nombre de paramètres pour update: " . count($params));
         
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {
