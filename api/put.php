@@ -38,8 +38,6 @@ function updateEntry($conn, $data) {
             'budget' => floatval($data['budget'] ?? 0),
             'montantReglement' => floatval($data['montantReglement'] ?? 0),
             'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
-            'ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'] ?? 0,
-            'budget_ytd' => $calculatedFields['budget_ytd'] ?? 0,
             'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd'],
             'id' => $data['id']
         ];
@@ -50,10 +48,10 @@ function updateEntry($conn, $data) {
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
             axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,
             montantReel = ?, budget = ?, montantReglement = ?,
-            ecart_budget_reel = ?, ecart_budget_atterissage = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
+            ecart_budget_reel = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
-        // Exactement 24 paramètres (23 pour les champs + 1 pour l'ID dans WHERE)
+        // Exactement 22 paramètres (21 pour les champs + 1 pour l'ID dans WHERE)
         $params = [
             $data['codeSociete'] ?? '',
             $data['fournisseur'] ?? '',
@@ -75,8 +73,6 @@ function updateEntry($conn, $data) {
             floatval($data['budget'] ?? 0),
             floatval($data['montantReglement'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['ecart_budget_atterissage'] ?? 0,
-            $calculatedFields['budget_ytd'] ?? 0,
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
         ];

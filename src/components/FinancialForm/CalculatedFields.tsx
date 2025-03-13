@@ -17,8 +17,6 @@ export function CalculatedFields({ formValues }: CalculatedFieldsProps) {
   
   const calculatedFields = {
     ecartBudgetReel: budget - montantReel,
-    ecartBudgetAtterissage: budget - montantReel,
-    budgetYTD: budgetYTD,
     budgetVsReelYTD: budgetYTD - montantReel,
   };
 
@@ -27,14 +25,6 @@ export function CalculatedFields({ formValues }: CalculatedFieldsProps) {
       <div className="p-4 bg-muted rounded-lg">
         <p className="text-sm font-medium mb-2">Écart Budget vs Montant Réel</p>
         <p className="text-lg font-bold">{calculatedFields.ecartBudgetReel.toFixed(2)} €</p>
-      </div>
-      <div className="p-4 bg-muted rounded-lg">
-        <p className="text-sm font-medium mb-2">Écart Budget vs Atterrissage</p>
-        <p className="text-lg font-bold">{calculatedFields.ecartBudgetAtterissage.toFixed(2)} €</p>
-      </div>
-      <div className="p-4 bg-muted rounded-lg">
-        <p className="text-sm font-medium mb-2">Budget YTD</p>
-        <p className="text-lg font-bold">{calculatedFields.budgetYTD.toFixed(2)} €</p>
       </div>
       <div className="p-4 bg-muted rounded-lg">
         <p className="text-sm font-medium mb-2">Budget vs Réel en YTD</p>

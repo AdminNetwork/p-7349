@@ -40,14 +40,10 @@ export interface FinancialFormData {
   budget: number;
   montantReglement: number;
   ecart_budget_reel: number;
-  ecart_budget_atterissage: number;
-  budget_ytd: number;
   budget_vs_reel_ytd: number;
 }
 
 export interface CalculatedFields {
   ecart_budget_reel: number;
-  ecart_budget_atterissage: number;
-  budget_ytd: number;
   budget_vs_reel_ytd: number;
 }
