@@ -38,7 +38,6 @@ function updateEntry($conn, $data) {
             'budget' => floatval($data['budget'] ?? 0),
             'regleEn' => floatval($data['regleEn'] ?? 0),
             'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
-            'budget_ytd' => $calculatedFields['budget_ytd'],
             'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd'],
             'id' => $data['id']
         ];
@@ -49,7 +48,7 @@ function updateEntry($conn, $data) {
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
             axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,
             montantReel = ?, budget = ?, regleEn = ?,
-            ecart_budget_reel = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
+            ecart_budget_reel = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
         $params = array(
@@ -73,7 +72,6 @@ function updateEntry($conn, $data) {
             floatval($data['budget'] ?? 0),
             floatval($data['regleEn'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
         );

@@ -14,8 +14,8 @@ function createEntry($conn, $data) {
         
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
-
-        // Préparation des paramètres pour le log
+        
+        // Log des paramètres avant exécution
         $paramsToLog = [
             'codeSociete' => $data['codeSociete'] ?? '',
             'fournisseur' => $data['fournisseur'] ?? '',
@@ -37,7 +37,6 @@ function createEntry($conn, $data) {
             'budget' => floatval($data['budget'] ?? 0),
             'regleEn' => floatval($data['regleEn'] ?? 0),
             'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
-            'budget_ytd' => $calculatedFields['budget_ytd'],
             'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
         ];
         error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
@@ -47,9 +46,9 @@ function createEntry($conn, $data) {
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
             axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,
-            montantReel, budget, regleEn, ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
+            montantReel, budget, regleEn, ecart_budget_reel, budget_vs_reel_ytd
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
         $params = array(
             $data['codeSociete'] ?? '',
             $data['fournisseur'] ?? '',
@@ -71,12 +70,11 @@ function createEntry($conn, $data) {
             floatval($data['budget'] ?? 0),
             floatval($data['regleEn'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd']
         );
         
         error_log("SQL: " . $sql);
-        error_log("Nombre de paramètres: " . count($params));
+        error_log("Nombre de paramètres pour insert: " . count($params));
         
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {

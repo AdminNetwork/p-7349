@@ -42,8 +42,7 @@ function calculateFields($mois_numerique, $data) {
 
     return [
         'ecart_budget_reel' => $budget - $montantReel,
-        'budget_ytd' => $budget !== 0 ? ($budget * $mois_numerique) / 12 : 0,
-        'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois_numerique) / 12 : 0) - $montantReel
+        'budget_vs_reel_ytd' => 0 - $montantReel
     ];
 }
 
