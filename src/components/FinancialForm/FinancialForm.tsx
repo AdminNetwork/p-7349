@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -261,19 +260,13 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="dateFinContrat"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date fin de contrat*</FormLabel>
+                <FormLabel>Date fin de contrat</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value}
+                  value={field.value || ""}
                 >
                   <FormControl>
-                    <SelectTrigger 
-                      className="bg-white"
-                      style={{ 
-                        borderColor: formState.errors.dateFinContrat ? requiredFieldErrorColor : undefined,
-                        borderWidth: formState.errors.dateFinContrat ? "2px" : undefined
-                      }}
-                    >
+                    <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Sélectionnez une période" />
                     </SelectTrigger>
                   </FormControl>
@@ -484,19 +477,13 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="dateReglement"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date du règlement*</FormLabel>
+                <FormLabel>Date du règlement</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value}
+                  value={field.value || ""}
                 >
                   <FormControl>
-                    <SelectTrigger 
-                      className="bg-white"
-                      style={{ 
-                        borderColor: formState.errors.dateReglement ? requiredFieldErrorColor : undefined,
-                        borderWidth: formState.errors.dateReglement ? "2px" : undefined
-                      }}
-                    >
+                    <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Sélectionnez une période" />
                     </SelectTrigger>
                   </FormControl>

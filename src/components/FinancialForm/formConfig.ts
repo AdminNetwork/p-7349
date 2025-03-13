@@ -47,14 +47,14 @@ export const formSchema = z.object({
   dateArriveeFacture: z.string().min(1, "La Date d'arrivée de la facture est requise"),
   typeDocument: z.string().min(1, "Le Type de document est requis"),
   delaisPrevis: z.number().min(0, "Le Délais préavis doit être positif"),
-  dateFinContrat: z.string().min(1, "La Date fin de contrat est requise"),
+  dateFinContrat: z.string().nullable().optional(), // Rendu facultatif
   referenceAffaire: z.string().min(1, "La Référence Affaire est requise"),
   contacts: z.string().min(1, "Les Contacts sont requis"),
   axeIT1: z.string().min(1, "L'Axe IT 1 est requis"),
   axeIT2: z.string().min(1, "L'Axe IT 2 est requis"),
   societeFacturee: z.string().min(1, "La Société facturée est requise"),
   annee: z.number().min(startYear, `L'année doit être supérieure ou égale à ${startYear}`),
-  dateReglement: z.string().min(1, "La Date du règlement est requise"),
+  dateReglement: z.string().nullable().optional(), // Rendu facultatif
   mois: z.number().min(1).max(12),
   montantReel: z.number().optional(),
   budget: z.number().optional(),

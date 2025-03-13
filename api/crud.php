@@ -44,6 +44,14 @@ function calculateFields($data) {
     ];
 }
 
+// Fonction pour gérer les valeurs nulles ou vides
+function handleNullableValue($value) {
+    if ($value === null || $value === '' || $value === 'null') {
+        return null;
+    }
+    return $value;
+}
+
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
@@ -69,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($data);
 
+        // Traitement des champs facultatifs
+        $dateFinContrat = handleNullableValue($data['dateFinContrat'] ?? null);
+        $dateReglement = handleNullableValue($data['dateReglement'] ?? null);
+
         // Requête SQL avec tous les champs
         $sql = "INSERT INTO budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
@@ -90,14 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['dateArriveeFacture'],
             $data['typeDocument'],
             floatval($data['delaisPrevis'] ?? 0),
-            $data['dateFinContrat'],
+            $dateFinContrat,
             $data['referenceAffaire'],
             $data['contacts'],
             $data['axeIT1'],
             $data['axeIT2'],
             $data['societeFacturee'],
             intval($data['annee']),
-            $data['dateReglement'],
+            $dateReglement,
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
@@ -133,6 +145,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $mois_libelle = getMonthLabel($mois_numerique);
         $calculatedFields = calculateFields($data);
         
+        // Traitement des champs facultatifs
+        $dateFinContrat = handleNullableValue($data['dateFinContrat'] ?? null);
+        $dateReglement = handleNullableValue($data['dateReglement'] ?? null);
+        
         $sql = "UPDATE budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
@@ -152,14 +168,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $data['dateArriveeFacture'],
             $data['typeDocument'],
             floatval($data['delaisPrevis'] ?? 0),
-            $data['dateFinContrat'],
+            $dateFinContrat,
             $data['referenceAffaire'],
             $data['contacts'],
             $data['axeIT1'],
             $data['axeIT2'],
             $data['societeFacturee'],
             intval($data['annee']),
-            $data['dateReglement'],
+            $dateReglement,
             $mois_libelle,
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),

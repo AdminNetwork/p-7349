@@ -42,7 +42,10 @@ export default function Interface() {
         montantReel: values.montantReel ?? 0,
         budget: values.budget ?? 0,
         regleEn: values.regleEn ?? 0,
-        delaisPrevis: values.delaisPrevis ?? 0
+        delaisPrevis: values.delaisPrevis ?? 0,
+        // Les champs facultatifs peuvent être null
+        dateReglement: values.dateReglement || null,
+        dateFinContrat: values.dateFinContrat || null
       };
 
       console.log('Données préparées:', preparedData); // Debug log
@@ -140,4 +143,3 @@ export default function Interface() {
     </div>
   );
 }
-
