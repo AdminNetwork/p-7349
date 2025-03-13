@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -361,26 +360,17 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
                 >
                   <FormControl>
                     <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Sélectionnez une période" />
+                      <SelectValue placeholder="Sélectionnez une année" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white">
-                    {periodeOptions.map((option) => (
+                    {yearRange.map((year) => (
                       <SelectItem
-                        key={option.value}
-                        value={option.value}
+                        key={`year-${year}`}
+                        value={year.toString()}
                         className="hover:bg-muted text-gray-900 hover:text-gray-900"
                       >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                    {monthsData.map((month) => (
-                      <SelectItem
-                        key={`month-${month.value}`}
-                        value={month.label}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {month.label}
+                        {year}
                       </SelectItem>
                     ))}
                   </SelectContent>
