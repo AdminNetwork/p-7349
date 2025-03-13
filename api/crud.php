@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("POST - Données reçues: " . print_r($data, true));
 
         // Conversion du mois numérique en libellé
-        $mois_numerique = intval($data['mois']);
+        $mois_numerique = intval($data['mois'] ?? 1);
         $mois_libelle = getMonthLabel($mois_numerique);
         
         // Calcul des champs dérivés
@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             throw new Exception('ID manquant');
         }
 
-        $mois_numerique = intval($data['mois']);
+        $mois_numerique = intval($data['mois'] ?? 1);
         $mois_libelle = getMonthLabel($mois_numerique);
         $calculatedFields = calculateFields($mois_numerique, $data);
         
