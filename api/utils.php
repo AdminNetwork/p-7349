@@ -40,9 +40,14 @@ function calculateFields($mois_numerique, $data) {
     $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
     $montantReglement = isset($data['montantReglement']) ? floatval($data['montantReglement']) : 0;
 
+    // Calculer le budget YTD (Year To Date) - exemple simple: budget * (mois / 12)
+    $budgetYTD = $budget * ($mois_numerique / 12);
+
     return [
         'ecart_budget_reel' => $budget - $montantReel,
-        'budget_vs_reel_ytd' => 0 - $montantReel
+        'ecart_budget_atterissage' => $budget - $montantReel,
+        'budget_ytd' => $budgetYTD,
+        'budget_vs_reel_ytd' => $budgetYTD - $montantReel
     ];
 }
 

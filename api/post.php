@@ -37,19 +37,22 @@ function createEntry($conn, $data) {
             'budget' => floatval($data['budget'] ?? 0),
             'montantReglement' => floatval($data['montantReglement'] ?? 0),
             'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            'ecart_budget_atterissage' => $calculatedFields['ecart_budget_atterissage'] ?? 0,
+            'budget_ytd' => $calculatedFields['budget_ytd'] ?? 0,
             'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
         ];
         error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
 
-        // Assurons-nous d'avoir exactement 21 paramètres pour les 21 champs dans l'instruction SQL
+        // Ajout des nouveaux champs dans l'instruction SQL
         $sql = "INSERT INTO DataWarehouse.budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
             axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,
-            montantReel, budget, montantReglement, ecart_budget_reel, budget_vs_reel_ytd
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            montantReel, budget, montantReglement, ecart_budget_reel, 
+            ecart_budget_atterissage, budget_ytd, budget_vs_reel_ytd
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        // Exactement 21 paramètres pour les 21 champs
+        // Ajout des nouveaux paramètres (23 au total)
         $params = [
             $data['codeSociete'] ?? '',
             $data['fournisseur'] ?? '',
@@ -71,6 +74,8 @@ function createEntry($conn, $data) {
             floatval($data['budget'] ?? 0),
             floatval($data['montantReglement'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
+            $calculatedFields['ecart_budget_atterissage'] ?? 0,
+            $calculatedFields['budget_ytd'] ?? 0,
             $calculatedFields['budget_vs_reel_ytd']
         ];
         
