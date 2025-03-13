@@ -11,15 +11,13 @@ function deleteEntry($conn, $id) {
         }
         
         $sql = "DELETE FROM DataWarehouse.budget_entries WHERE id = ?";
-        $params = array($id);
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(1, $id);
         
-        $stmt = sqlsrv_query($conn, $sql, $params);
-        if ($stmt === false) {
-            throw new Exception("Error in delete query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
-        }
+        $stmt->execute();
         
         echo json_encode(['success' => true]);
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         handleError("Erreur lors de la suppression d'entrée", $e);
     }
 }

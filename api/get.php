@@ -7,19 +7,13 @@ require_once 'utils.php';
 function getEntries($conn) {
     try {
         $sql = "SELECT * FROM DataWarehouse.budget_entries ORDER BY id DESC";
-        $stmt = sqlsrv_query($conn, $sql);
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
         
-        if ($stmt === false) {
-            throw new Exception("Error in query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
-        }
-        
-        $results = array();
-        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-            $results[] = $row;
-        }
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         echo json_encode($results);
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         error_log("GET Error: " . $e->getMessage());
         handleError("Erreur lors de la récupération des données", $e);
     }

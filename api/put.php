@@ -51,52 +51,43 @@ function updateEntry($conn, $data) {
             ecart_budget_reel = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
+        $stmt = $conn->prepare($sql);
+        
         // Exactement 22 paramètres (21 pour les champs + 1 pour l'ID dans WHERE)
-        $params = [
-            $data['codeSociete'] ?? '',
-            $data['fournisseur'] ?? '',
-            $data['codeArticle'] ?? '',
-            $data['natureCommande'] ?? '',
-            $data['dateArriveeFacture'] ?? '',
-            $data['typeDocument'] ?? '',
-            floatval($data['delaisPrevis'] ?? 0),
-            $data['dateFinContrat'] ?? '',
-            $data['referenceAffaire'] ?? '',
-            $data['contacts'] ?? '',
-            $data['axeIT1'] ?? '',
-            $data['axeIT2'] ?? '',
-            $data['societeFacturee'] ?? '',
-            intval($data['annee'] ?? 0),
-            $data['dateReglement'] ?? '',
-            $mois_libelle,
-            floatval($data['montantReel'] ?? 0),
-            floatval($data['budget'] ?? 0),
-            floatval($data['montantReglement'] ?? 0),
-            $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['budget_vs_reel_ytd'],
-            $data['id']
-        ];
+        $stmt->bindParam(1, $data['codeSociete'] ?? '');
+        $stmt->bindParam(2, $data['fournisseur'] ?? '');
+        $stmt->bindParam(3, $data['codeArticle'] ?? '');
+        $stmt->bindParam(4, $data['natureCommande'] ?? '');
+        $stmt->bindParam(5, $data['dateArriveeFacture'] ?? '');
+        $stmt->bindParam(6, $data['typeDocument'] ?? '');
+        $delaisPrevis = floatval($data['delaisPrevis'] ?? 0);
+        $stmt->bindParam(7, $delaisPrevis);
+        $stmt->bindParam(8, $data['dateFinContrat'] ?? '');
+        $stmt->bindParam(9, $data['referenceAffaire'] ?? '');
+        $stmt->bindParam(10, $data['contacts'] ?? '');
+        $stmt->bindParam(11, $data['axeIT1'] ?? '');
+        $stmt->bindParam(12, $data['axeIT2'] ?? '');
+        $stmt->bindParam(13, $data['societeFacturee'] ?? '');
+        $annee = intval($data['annee'] ?? 0);
+        $stmt->bindParam(14, $annee);
+        $stmt->bindParam(15, $data['dateReglement'] ?? '');
+        $stmt->bindParam(16, $mois_libelle);
+        $montantReel = floatval($data['montantReel'] ?? 0);
+        $stmt->bindParam(17, $montantReel);
+        $budget = floatval($data['budget'] ?? 0);
+        $stmt->bindParam(18, $budget);
+        $montantReglement = floatval($data['montantReglement'] ?? 0);
+        $stmt->bindParam(19, $montantReglement);
+        $ecart_budget_reel = $calculatedFields['ecart_budget_reel'];
+        $stmt->bindParam(20, $ecart_budget_reel);
+        $budget_vs_reel_ytd = $calculatedFields['budget_vs_reel_ytd'];
+        $stmt->bindParam(21, $budget_vs_reel_ytd);
+        $stmt->bindParam(22, $data['id']);
         
-        // Vérification du nombre de paramètres
-        $placeholderCount = substr_count($sql, '?');
-        $paramCount = count($params);
-        error_log("SQL Update: " . $sql);
-        error_log("Nombre de paramètres attendus: " . $placeholderCount);
-        error_log("Nombre de paramètres fournis: " . $paramCount);
-        
-        if ($placeholderCount !== $paramCount) {
-            throw new Exception("Erreur: Nombre de paramètres ($paramCount) ne correspond pas au nombre de placeholders ($placeholderCount)");
-        }
-        
-        $stmt = sqlsrv_query($conn, $sql, $params);
-        if ($stmt === false) {
-            $errors = sqlsrv_errors();
-            error_log("Erreur SQL lors de la mise à jour: " . json_encode($errors, JSON_PRETTY_PRINT));
-            throw new Exception("Error in update query: " . json_encode($errors, JSON_PRETTY_PRINT));
-        }
+        $stmt->execute();
         
         echo json_encode(['success' => true]);
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         handleError("Erreur lors de la mise à jour d'entrée", $e);
     }
 }

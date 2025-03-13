@@ -14,23 +14,16 @@ $user = 'JEMSPROD';
 $password = '*EL*KTafPGm8qC';
 
 try {
-    // SQL Server connection string
-    $connectionInfo = array(
-        "Database" => $dbname,
-        "UID" => $user,
-        "PWD" => $password,
-        "CharacterSet" => "UTF-8"
-    );
+    // PDO connection to SQL Server
+    $dsn = "sqlsrv:Server=$host,$port;Database=$dbname";
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::SQLSRV_ATTR_ENCODING => PDO::SQLSRV_ENCODING_UTF8
+    ];
     
-    // Create connection to SQL Server
-    $serverName = "$host,$port";
-    $conn = sqlsrv_connect($serverName, $connectionInfo);
+    $conn = new PDO($dsn, $user, $password, $options);
     
-    if (!$conn) {
-        $errors = sqlsrv_errors();
-        throw new Exception("SQL Server Connection Error: " . json_encode($errors));
-    }
-} catch (Exception $e) {
+} catch (PDOException $e) {
     error_log("Connection Error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);

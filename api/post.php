@@ -50,63 +50,46 @@ function createEntry($conn, $data) {
             budget_vs_reel_ytd
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
+        $stmt = $conn->prepare($sql);
+        
         // Ajout des nouveaux paramètres (21 au total)
-        $params = [
-            $data['codeSociete'] ?? '',
-            $data['fournisseur'] ?? '',
-            $data['codeArticle'] ?? '',
-            $data['natureCommande'] ?? '',
-            $data['dateArriveeFacture'] ?? '',
-            $data['typeDocument'] ?? '',
-            floatval($data['delaisPrevis'] ?? 0),
-            $data['dateFinContrat'] ?? '',
-            $data['referenceAffaire'] ?? '',
-            $data['contacts'] ?? '',
-            $data['axeIT1'] ?? '',
-            $data['axeIT2'] ?? '',
-            $data['societeFacturee'] ?? '',
-            intval($data['annee'] ?? 0),
-            $data['dateReglement'] ?? '',
-            $mois_libelle,
-            floatval($data['montantReel'] ?? 0),
-            floatval($data['budget'] ?? 0),
-            floatval($data['montantReglement'] ?? 0),
-            $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['budget_vs_reel_ytd']
-        ];
+        $stmt->bindParam(1, $data['codeSociete'] ?? '');
+        $stmt->bindParam(2, $data['fournisseur'] ?? '');
+        $stmt->bindParam(3, $data['codeArticle'] ?? '');
+        $stmt->bindParam(4, $data['natureCommande'] ?? '');
+        $stmt->bindParam(5, $data['dateArriveeFacture'] ?? '');
+        $stmt->bindParam(6, $data['typeDocument'] ?? '');
+        $delaisPrevis = floatval($data['delaisPrevis'] ?? 0);
+        $stmt->bindParam(7, $delaisPrevis);
+        $stmt->bindParam(8, $data['dateFinContrat'] ?? '');
+        $stmt->bindParam(9, $data['referenceAffaire'] ?? '');
+        $stmt->bindParam(10, $data['contacts'] ?? '');
+        $stmt->bindParam(11, $data['axeIT1'] ?? '');
+        $stmt->bindParam(12, $data['axeIT2'] ?? '');
+        $stmt->bindParam(13, $data['societeFacturee'] ?? '');
+        $annee = intval($data['annee'] ?? 0);
+        $stmt->bindParam(14, $annee);
+        $stmt->bindParam(15, $data['dateReglement'] ?? '');
+        $stmt->bindParam(16, $mois_libelle);
+        $montantReel = floatval($data['montantReel'] ?? 0);
+        $stmt->bindParam(17, $montantReel);
+        $budget = floatval($data['budget'] ?? 0);
+        $stmt->bindParam(18, $budget);
+        $montantReglement = floatval($data['montantReglement'] ?? 0);
+        $stmt->bindParam(19, $montantReglement);
+        $ecart_budget_reel = $calculatedFields['ecart_budget_reel'];
+        $stmt->bindParam(20, $ecart_budget_reel);
+        $budget_vs_reel_ytd = $calculatedFields['budget_vs_reel_ytd'];
+        $stmt->bindParam(21, $budget_vs_reel_ytd);
         
-        // Vérification du nombre de paramètres
-        $placeholderCount = substr_count($sql, '?');
-        $paramCount = count($params);
-        error_log("SQL: " . $sql);
-        error_log("Nombre de paramètres attendus: " . $placeholderCount);
-        error_log("Nombre de paramètres fournis: " . $paramCount);
+        $stmt->execute();
         
-        if ($placeholderCount !== $paramCount) {
-            throw new Exception("Erreur: Nombre de paramètres ($paramCount) ne correspond pas au nombre de placeholders ($placeholderCount)");
-        }
-        
-        $stmt = sqlsrv_query($conn, $sql, $params);
-        if ($stmt === false) {
-            $errors = sqlsrv_errors();
-            error_log("Erreur SQL lors de l'insertion: " . json_encode($errors, JSON_PRETTY_PRINT));
-            throw new Exception("Error in insert query: " . json_encode($errors, JSON_PRETTY_PRINT));
-        }
-        
-        // Get the ID of the newly inserted record (SQL Server specific)
-        $identitySql = "SELECT SCOPE_IDENTITY() AS ID";
-        $identityStmt = sqlsrv_query($conn, $identitySql);
-        if ($identityStmt === false) {
-            throw new Exception("Error getting inserted ID: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
-        }
-        $newId = 0;
-        if (sqlsrv_fetch($identityStmt)) {
-            $newId = sqlsrv_get_field($identityStmt, 0);
-        }
+        // Get the ID of the newly inserted record
+        $newId = $conn->lastInsertId();
         
         echo json_encode(['success' => true, 'id' => $newId]);
         
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         handleError("Erreur lors de la création d'entrée", $e);
     }
 }
