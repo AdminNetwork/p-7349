@@ -35,15 +35,12 @@ function getMonthLabel($value) {
 }
 
 // Fonction pour calculer les champs
-function calculateFields($mois_numerique, $data) {
+function calculateFields($data) {
     $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
-    $regleEn = isset($data['regleEn']) ? floatval($data['regleEn']) : 0;
-
+    
     return [
-        'ecart_budget_reel' => $budget - $montantReel,
-        'budget_ytd' => $budget !== 0 ? ($budget * $mois_numerique) / 12 : 0,
-        'budget_vs_reel_ytd' => ($budget !== 0 ? ($budget * $mois_numerique) / 12 : 0) - $montantReel
+        'ecart_budget_reel' => $budget - $montantReel
     ];
 }
 
@@ -70,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mois_libelle = getMonthLabel($mois_numerique);
         
         // Calcul des champs dérivés
-        $calculatedFields = calculateFields($mois_numerique, $data);
+        $calculatedFields = calculateFields($data);
 
         // Requête SQL avec tous les champs
         $sql = "INSERT INTO budget_entries (
@@ -78,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
             axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,
             montantReel, budget, regleEn,
-            ecart_budget_reel, budget_ytd, budget_vs_reel_ytd
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ecart_budget_reel
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $pdo->prepare($sql);
         error_log("SQL préparé: " . $sql);
@@ -105,9 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             floatval($data['montantReel'] ?? 0),
             floatval($data['budget'] ?? 0),
             floatval($data['regleEn'] ?? 0),
-            $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['budget_ytd'],
-            $calculatedFields['budget_vs_reel_ytd']
+            $calculatedFields['ecart_budget_reel']
         ];
 
         error_log("Paramètres pour l'exécution: " . print_r($params, true));
@@ -136,14 +131,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 
         $mois_numerique = intval($data['mois']);
         $mois_libelle = getMonthLabel($mois_numerique);
-        $calculatedFields = calculateFields($mois_numerique, $data);
+        $calculatedFields = calculateFields($data);
         
         $sql = "UPDATE budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
             axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,
             montantReel = ?, budget = ?, regleEn = ?,
-            ecart_budget_reel = ?, budget_ytd = ?, budget_vs_reel_ytd = ?
+            ecart_budget_reel = ?
             WHERE id = ?";
         
         $stmt = $pdo->prepare($sql);
@@ -170,8 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             floatval($data['budget'] ?? 0),
             floatval($data['regleEn'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
-            $calculatedFields['budget_ytd'],
-            $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
         ];
         
@@ -206,3 +199,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     }
 }
 ?>
+

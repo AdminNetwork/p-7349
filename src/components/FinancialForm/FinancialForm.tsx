@@ -351,6 +351,37 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           />
           <FormField
             control={form.control}
+            name="mois"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mois</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  value={field.value.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Sélectionnez un mois" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {monthsData.map((month) => (
+                      <SelectItem
+                        key={month.value}
+                        value={month.value.toString()}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="dateReglement"
             render={({ field }) => (
               <FormItem>
@@ -378,37 +409,6 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
                       <SelectItem
                         key={`month-${month.value}`}
                         value={month.label}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="mois"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mois</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(parseInt(value))}
-                  value={field.value.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Sélectionnez un mois" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white">
-                    {monthsData.map((month) => (
-                      <SelectItem
-                        key={month.value}
-                        value={month.value.toString()}
                         className="hover:bg-muted text-gray-900 hover:text-gray-900"
                       >
                         {month.label}
@@ -464,7 +464,7 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             name="regleEn"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Réglé en</FormLabel>
+                <FormLabel>Montant du règlement</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -498,3 +498,4 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     </Form>
   );
 }
+

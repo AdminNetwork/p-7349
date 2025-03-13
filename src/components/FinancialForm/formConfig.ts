@@ -31,6 +31,7 @@ export const monthsData = [
 
 export const periodeOptions = [
   { value: "mensuel", label: "Mensuel" },
+  { value: "bimestriel", label: "Bimestriel" },
   { value: "trimestriel", label: "Trimestriel" },
   { value: "semestriel", label: "Semestriel" },
 ];
@@ -58,3 +59,4 @@ export const formSchema = z.object({
 });
 
 export type FormSchema = z.infer<typeof formSchema>;
+
