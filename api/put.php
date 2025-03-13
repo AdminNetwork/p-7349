@@ -43,11 +43,6 @@ function updateEntry($conn, $data) {
         ];
         error_log("Paramètres pour la mise à jour: " . print_r($paramsToLog, true));
 
-        // Count the number of placeholders vs parameters
-        $placeholderCount = 22; // This is the number of ? in your SQL statement (21 for columns + 1 for WHERE id=?)
-        $paramCount = count($paramsToLog);
-        error_log("Placeholders: $placeholderCount, Parameters: $paramCount");
-
         $sql = "UPDATE DataWarehouse.budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
@@ -56,7 +51,8 @@ function updateEntry($conn, $data) {
             ecart_budget_reel = ?, budget_vs_reel_ytd = ?
             WHERE id = ?";
         
-        $params = array(
+        // Exactement 22 paramètres (21 pour les champs + 1 pour l'ID dans WHERE)
+        $params = [
             $data['codeSociete'] ?? '',
             $data['fournisseur'] ?? '',
             $data['codeArticle'] ?? '',
@@ -79,10 +75,18 @@ function updateEntry($conn, $data) {
             $calculatedFields['ecart_budget_reel'],
             $calculatedFields['budget_vs_reel_ytd'],
             $data['id']
-        );
+        ];
         
+        // Vérification du nombre de paramètres
+        $placeholderCount = substr_count($sql, '?');
+        $paramCount = count($params);
         error_log("SQL Update: " . $sql);
-        error_log("Nombre de paramètres pour update: " . count($params));
+        error_log("Nombre de paramètres attendus: " . $placeholderCount);
+        error_log("Nombre de paramètres fournis: " . $paramCount);
+        
+        if ($placeholderCount !== $paramCount) {
+            throw new Exception("Erreur: Nombre de paramètres ($paramCount) ne correspond pas au nombre de placeholders ($placeholderCount)");
+        }
         
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {

@@ -41,11 +41,7 @@ function createEntry($conn, $data) {
         ];
         error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
 
-        // Count the number of placeholders vs parameters
-        $placeholderCount = 21; // This is the number of ? in your SQL statement
-        $paramCount = count($paramsToLog);
-        error_log("Placeholders: $placeholderCount, Parameters: $paramCount");
-
+        // Assurons-nous d'avoir exactement 21 paramètres pour les 21 champs dans l'instruction SQL
         $sql = "INSERT INTO DataWarehouse.budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
@@ -53,7 +49,8 @@ function createEntry($conn, $data) {
             montantReel, budget, montantReglement, ecart_budget_reel, budget_vs_reel_ytd
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        $params = array(
+        // Exactement 21 paramètres pour les 21 champs
+        $params = [
             $data['codeSociete'] ?? '',
             $data['fournisseur'] ?? '',
             $data['codeArticle'] ?? '',
@@ -75,10 +72,18 @@ function createEntry($conn, $data) {
             floatval($data['montantReglement'] ?? 0),
             $calculatedFields['ecart_budget_reel'],
             $calculatedFields['budget_vs_reel_ytd']
-        );
+        ];
         
+        // Vérification du nombre de paramètres
+        $placeholderCount = substr_count($sql, '?');
+        $paramCount = count($params);
         error_log("SQL: " . $sql);
-        error_log("Nombre de paramètres pour insert: " . count($params));
+        error_log("Nombre de paramètres attendus: " . $placeholderCount);
+        error_log("Nombre de paramètres fournis: " . $paramCount);
+        
+        if ($placeholderCount !== $paramCount) {
+            throw new Exception("Erreur: Nombre de paramètres ($paramCount) ne correspond pas au nombre de placeholders ($placeholderCount)");
+        }
         
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {
