@@ -43,6 +43,11 @@ function updateEntry($conn, $data) {
         ];
         error_log("Paramètres pour la mise à jour: " . print_r($paramsToLog, true));
 
+        // Count the number of placeholders vs parameters
+        $placeholderCount = 22; // This is the number of ? in your SQL statement (21 for columns + 1 for WHERE id=?)
+        $paramCount = count($paramsToLog);
+        error_log("Placeholders: $placeholderCount, Parameters: $paramCount");
+
         $sql = "UPDATE DataWarehouse.budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,

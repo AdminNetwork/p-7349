@@ -41,7 +41,11 @@ function createEntry($conn, $data) {
         ];
         error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
 
-        // Requête SQL corrigée pour correspondre exactement aux colonnes de la table
+        // Count the number of placeholders vs parameters
+        $placeholderCount = 21; // This is the number of ? in your SQL statement
+        $paramCount = count($paramsToLog);
+        error_log("Placeholders: $placeholderCount, Parameters: $paramCount");
+
         $sql = "INSERT INTO DataWarehouse.budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
