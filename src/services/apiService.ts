@@ -3,20 +3,14 @@ import axios from 'axios';
 import type { FinancialFormData } from '@/types/budget';
 import type { FormSchema } from '@/components/FinancialForm/formConfig';
 
-// Remplacez cette URL par celle de votre service API
-// Vous pouvez héberger un service simple sur:
-// - Azure Functions
-// - AWS Lambda
-// - Vercel Serverless Functions
-// - Netlify Functions
-// - Ou tout autre service d'hébergement API
-const API_URL = 'https://votre-api.exemple.com/api';
+// URL de l'API PHP locale
+const API_URL = 'http://localhost/kevin_api';
 
 export const apiService = {
   // Récupérer toutes les entrées
   async getEntries(): Promise<FinancialFormData[]> {
     try {
-      const response = await axios.get(`${API_URL}/entries`);
+      const response = await axios.get(`${API_URL}/crud.php`);
       return response.data;
     } catch (error) {
       console.error('Error fetching entries:', error);
@@ -27,7 +21,7 @@ export const apiService = {
   // Ajouter une nouvelle entrée
   async addEntry(entry: FormSchema): Promise<FinancialFormData> {
     try {
-      const response = await axios.post(`${API_URL}/entries`, entry);
+      const response = await axios.post(`${API_URL}/crud.php`, entry);
       return response.data;
     } catch (error) {
       console.error('Error adding entry:', error);
@@ -38,7 +32,7 @@ export const apiService = {
   // Mettre à jour une entrée existante
   async updateEntry(id: number, entry: FormSchema): Promise<FinancialFormData> {
     try {
-      const response = await axios.put(`${API_URL}/entries/${id}`, entry);
+      const response = await axios.put(`${API_URL}/crud.php?id=${id}`, entry);
       return response.data;
     } catch (error) {
       console.error('Error updating entry:', error);
@@ -49,7 +43,7 @@ export const apiService = {
   // Supprimer une entrée
   async deleteEntry(id: number): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/entries/${id}`);
+      await axios.delete(`${API_URL}/crud.php?id=${id}`);
     } catch (error) {
       console.error('Error deleting entry:', error);
       throw error;

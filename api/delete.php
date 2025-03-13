@@ -10,7 +10,7 @@ function deleteEntry($conn, $id) {
             throw new Exception('ID manquant');
         }
         
-        $sql = "DELETE FROM DataWarehouse.budget_entries WHERE id = ?";
+        $sql = "DELETE FROM budget_entries WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(1, $id);
         

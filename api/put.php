@@ -43,7 +43,7 @@ function updateEntry($conn, $data) {
         ];
         error_log("Paramètres pour la mise à jour: " . print_r($paramsToLog, true));
 
-        $sql = "UPDATE DataWarehouse.budget_entries SET 
+        $sql = "UPDATE budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
             axeIT1 = ?, axeIT2 = ?, societeFacturee = ?, annee = ?, dateReglement = ?, mois = ?,

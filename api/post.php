@@ -42,7 +42,7 @@ function createEntry($conn, $data) {
         error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
 
         // Ajout des nouveaux champs dans l'instruction SQL
-        $sql = "INSERT INTO DataWarehouse.budget_entries (
+        $sql = "INSERT INTO budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
             typeDocument, delaisPrevis, dateFinContrat, referenceAffaire, contacts,
             axeIT1, axeIT2, societeFacturee, annee, dateReglement, mois,

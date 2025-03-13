@@ -6,7 +6,7 @@ require_once 'utils.php';
 // Récupérer toutes les entrées
 function getEntries($conn) {
     try {
-        $sql = "SELECT * FROM DataWarehouse.budget_entries ORDER BY id DESC";
+        $sql = "SELECT * FROM budget_entries ORDER BY id DESC";
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         

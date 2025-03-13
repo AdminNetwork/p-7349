@@ -10,23 +10,23 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-// SQL Server Connection Parameters
-$host = 'svinmssql001.groupedehon.com';
-$port = '1433';
-$dbname = 'MDMPROD';
-$schema = 'DataWarehouse';
-$user = 'JEMSPROD';
-$password = '*EL*KTafPGm8qC';
+// MySQL Connection Parameters
+$host = 'localhost';
+$db   = 'kevin_api';
+$user = 'root';
+$pass = ''; 
+$charset = 'utf8mb4';
 
 try {
-    // PDO connection to SQL Server
-    $dsn = "sqlsrv:Server=$host,$port;Database=$dbname";
+    // PDO connection to MySQL
+    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
     $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::SQLSRV_ATTR_ENCODING => PDO::SQLSRV_ENCODING_UTF8
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
     ];
     
-    $conn = new PDO($dsn, $user, $password, $options);
+    $conn = new PDO($dsn, $user, $pass, $options);
     
 } catch (PDOException $e) {
     error_log("Connection Error: " . $e->getMessage());
