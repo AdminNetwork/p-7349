@@ -6,6 +6,7 @@ import type { FinancialFormData } from "@/types/budget";
 import { FinancialForm } from "@/components/FinancialForm/FinancialForm";
 import { EntriesList } from "@/components/FinancialForm/EntriesList";
 import type { FormSchema } from "@/components/FinancialForm/formConfig";
+import { format } from "date-fns";
 
 export default function Interface() {
   const { toast } = useToast();
@@ -36,16 +37,19 @@ export default function Interface() {
 
   const handleSubmit = async (values: FormSchema) => {
     try {
+      // Formatage des dates pour l'API
+      const dateFinContrat = values.dateFinContrat ? format(values.dateFinContrat, 'yyyy-MM-dd') : null;
+      const dateReglement = values.dateReglement ? format(values.dateReglement, 'yyyy-MM-dd') : null;
+      
       // Initialisation des champs numériques à 0 s'ils sont undefined
       const preparedData = {
         ...values,
+        dateFinContrat,
+        dateReglement,
         montantReel: values.montantReel ?? 0,
         budget: values.budget ?? 0,
         regleEn: values.regleEn ?? 0,
         delaisPrevis: values.delaisPrevis ?? 0,
-        // Les champs facultatifs peuvent être null
-        dateReglement: values.dateReglement || null,
-        dateFinContrat: values.dateFinContrat || null
       };
 
       console.log('Données préparées:', preparedData); // Debug log

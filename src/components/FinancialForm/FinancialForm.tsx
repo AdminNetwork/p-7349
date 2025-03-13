@@ -9,7 +9,8 @@ import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
 import { monthsData, yearRange, periodeOptions, formSchema, requiredFieldErrorColor } from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 type FormSchema = z.infer<typeof formSchema>;
 
@@ -31,14 +32,14 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
       dateArriveeFacture: "",
       typeDocument: "",
       delaisPrevis: 0,
-      dateFinContrat: "",
+      dateFinContrat: null,
       referenceAffaire: "",
       contacts: "",
       axeIT1: "",
       axeIT2: "",
       societeFacturee: "",
       annee: currentDate.getFullYear(),
-      dateReglement: "",
+      dateReglement: null,
       mois: currentDate.getMonth() + 1,
       montantReel: undefined,
       budget: undefined,
@@ -53,6 +54,25 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
         const monthEntry = monthsData.find(m => m.label === entryToEdit.mois);
         const monthNumber = monthEntry ? monthEntry.value : 1;
         
+        let dateFinContrat = null;
+        let dateReglement = null;
+        
+        if (entryToEdit.dateFinContrat && entryToEdit.dateFinContrat !== "") {
+          try {
+            dateFinContrat = new Date(entryToEdit.dateFinContrat);
+          } catch (e) {
+            console.error("Erreur lors de la conversion de la date de fin de contrat:", e);
+          }
+        }
+        
+        if (entryToEdit.dateReglement && entryToEdit.dateReglement !== "") {
+          try {
+            dateReglement = new Date(entryToEdit.dateReglement);
+          } catch (e) {
+            console.error("Erreur lors de la conversion de la date de règlement:", e);
+          }
+        }
+        
         const formData = {
           codeSociete: entryToEdit.codeSociete || "",
           fournisseur: entryToEdit.fournisseur || "",
@@ -61,14 +81,14 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
           dateArriveeFacture: entryToEdit.dateArriveeFacture || "",
           typeDocument: entryToEdit.typeDocument || "",
           delaisPrevis: Number(entryToEdit.delaisPrevis) || 0,
-          dateFinContrat: entryToEdit.dateFinContrat || "",
+          dateFinContrat: dateFinContrat,
           referenceAffaire: entryToEdit.referenceAffaire || "",
           contacts: entryToEdit.contacts || "",
           axeIT1: entryToEdit.axeIT1 || "",
           axeIT2: entryToEdit.axeIT2 || "",
           societeFacturee: entryToEdit.societeFacturee || "",
           annee: Number(entryToEdit.annee),
-          dateReglement: entryToEdit.dateReglement || "",
+          dateReglement: dateReglement,
           mois: monthNumber,
           montantReel: Number(entryToEdit.montantReel) || undefined,
           budget: Number(entryToEdit.budget) || undefined,
@@ -261,36 +281,13 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date fin de contrat</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Sélectionnez une période" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white">
-                    {periodeOptions.map((option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={option.value}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                    {monthsData.map((month) => (
-                      <SelectItem
-                        key={`month-${month.value}`}
-                        value={month.label}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <DatePicker
+                    date={field.value || undefined}
+                    setDate={(date) => field.onChange(date)}
+                    placeholder="Sélectionner une date"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -478,36 +475,13 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date du règlement</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Sélectionnez une période" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white">
-                    {periodeOptions.map((option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={option.value}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                    {monthsData.map((month) => (
-                      <SelectItem
-                        key={`month-${month.value}`}
-                        value={month.label}
-                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
-                      >
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <DatePicker
+                    date={field.value || undefined}
+                    setDate={(date) => field.onChange(date)}
+                    placeholder="Sélectionner une date"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
