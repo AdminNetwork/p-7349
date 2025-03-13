@@ -83,6 +83,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Calcul des champs dérivés
         $calculatedFields = calculateFields($mois_numerique, $data);
 
+        // Log des données avant exécution de la requête
+        $paramsToLog = [
+            'codeSociete' => $data['codeSociete'] ?? '',
+            'fournisseur' => $data['fournisseur'] ?? '',
+            'codeArticle' => $data['codeArticle'] ?? '',
+            'natureCommande' => $data['natureCommande'] ?? '',
+            'dateArriveeFacture' => $data['dateArriveeFacture'] ?? '',
+            'typeDocument' => $data['typeDocument'] ?? '',
+            'delaisPrevis' => floatval($data['delaisPrevis'] ?? 0),
+            'dateFinContrat' => $data['dateFinContrat'] ?? '',
+            'referenceAffaire' => $data['referenceAffaire'] ?? '',
+            'contacts' => $data['contacts'] ?? '',
+            'axeIT1' => $data['axeIT1'] ?? '',
+            'axeIT2' => $data['axeIT2'] ?? '',
+            'societeFacturee' => $data['societeFacturee'] ?? '',
+            'annee' => intval($data['annee'] ?? 0),
+            'dateReglement' => $data['dateReglement'] ?? '',
+            'mois' => $mois_libelle,
+            'montantReel' => floatval($data['montantReel'] ?? 0),
+            'budget' => floatval($data['budget'] ?? 0),
+            'regleEn' => floatval($data['regleEn'] ?? 0),
+            'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            'budget_ytd' => $calculatedFields['budget_ytd'],
+            'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd']
+        ];
+        error_log("Paramètres pour l'exécution: " . print_r($paramsToLog, true));
+
         // Requête SQL avec tous les champs
         $sql = "INSERT INTO DataWarehouse.budget_entries (
             codeSociete, fournisseur, codeArticle, natureCommande, dateArriveeFacture,
@@ -116,12 +143,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $calculatedFields['budget_ytd'],
             $calculatedFields['budget_vs_reel_ytd']
         );
-
-        error_log("Paramètres pour l'exécution: " . print_r($params, true));
         
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {
-            throw new Exception("Error in insert query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+            $errors = sqlsrv_errors();
+            error_log("Erreur SQL lors de l'insertion: " . json_encode($errors, JSON_PRETTY_PRINT));
+            throw new Exception("Error in insert query: " . json_encode($errors, JSON_PRETTY_PRINT));
         }
         
         // Get the ID of the newly inserted record (SQL Server specific)
@@ -159,6 +186,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $mois_libelle = getMonthLabel($mois_numerique);
         $calculatedFields = calculateFields($mois_numerique, $data);
         
+        // Log des paramètres avant exécution
+        $paramsToLog = [
+            'codeSociete' => $data['codeSociete'] ?? '',
+            'fournisseur' => $data['fournisseur'] ?? '',
+            'codeArticle' => $data['codeArticle'] ?? '',
+            'natureCommande' => $data['natureCommande'] ?? '',
+            'dateArriveeFacture' => $data['dateArriveeFacture'] ?? '',
+            'typeDocument' => $data['typeDocument'] ?? '',
+            'delaisPrevis' => floatval($data['delaisPrevis'] ?? 0),
+            'dateFinContrat' => $data['dateFinContrat'] ?? '',
+            'referenceAffaire' => $data['referenceAffaire'] ?? '',
+            'contacts' => $data['contacts'] ?? '',
+            'axeIT1' => $data['axeIT1'] ?? '',
+            'axeIT2' => $data['axeIT2'] ?? '',
+            'societeFacturee' => $data['societeFacturee'] ?? '',
+            'annee' => intval($data['annee'] ?? 0),
+            'dateReglement' => $data['dateReglement'] ?? '',
+            'mois' => $mois_libelle,
+            'montantReel' => floatval($data['montantReel'] ?? 0),
+            'budget' => floatval($data['budget'] ?? 0),
+            'regleEn' => floatval($data['regleEn'] ?? 0),
+            'ecart_budget_reel' => $calculatedFields['ecart_budget_reel'],
+            'budget_ytd' => $calculatedFields['budget_ytd'],
+            'budget_vs_reel_ytd' => $calculatedFields['budget_vs_reel_ytd'],
+            'id' => $data['id']
+        ];
+        error_log("Paramètres pour la mise à jour: " . print_r($paramsToLog, true));
+
         $sql = "UPDATE DataWarehouse.budget_entries SET 
             codeSociete = ?, fournisseur = ?, codeArticle = ?, natureCommande = ?, dateArriveeFacture = ?,
             typeDocument = ?, delaisPrevis = ?, dateFinContrat = ?, referenceAffaire = ?, contacts = ?,
@@ -193,11 +248,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $data['id']
         );
         
-        error_log("Paramètres pour l'exécution: " . print_r($params, true));
-        
         $stmt = sqlsrv_query($conn, $sql, $params);
         if ($stmt === false) {
-            throw new Exception("Error in update query: " . json_encode(sqlsrv_errors(), JSON_PRETTY_PRINT));
+            $errors = sqlsrv_errors();
+            error_log("Erreur SQL lors de la mise à jour: " . json_encode($errors, JSON_PRETTY_PRINT));
+            throw new Exception("Error in update query: " . json_encode($errors, JSON_PRETTY_PRINT));
         }
         
         echo json_encode(['success' => true]);
