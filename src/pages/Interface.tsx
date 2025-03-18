@@ -22,14 +22,20 @@ export default function Interface() {
   const loadEntries = async () => {
     setIsLoading(true);
     try {
+      // Use AbortController for timeout instead of the non-standard timeout option
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
+      
       const response = await fetch(API_URL, { 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache'
         },
-        timeout: 5000  // 5 seconds timeout
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId); // Clear the timeout if fetch completes before timeout
       
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des données');
