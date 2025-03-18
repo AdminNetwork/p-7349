@@ -45,9 +45,15 @@ function getMonthLabel($value) {
 function calculateFields($data) {
     $budget = isset($data['budget']) ? floatval($data['budget']) : 0;
     $montantReel = isset($data['montantReel']) ? floatval($data['montantReel']) : 0;
+    $regleEn = isset($data['regleEn']) ? floatval($data['regleEn']) : 0;
+    
+    // Nouvelle formule qui prend en compte le montant du règlement s'il est supérieur à 0
+    $ecart_budget_reel = $regleEn > 0 
+        ? $budget - $montantReel - $regleEn
+        : $budget - $montantReel;
     
     return [
-        'ecart_budget_reel' => $budget - $montantReel
+        'ecart_budget_reel' => $ecart_budget_reel
     ];
 }
 
