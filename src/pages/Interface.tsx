@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,43 +16,27 @@ export default function Interface() {
   const [isOffline, setIsOffline] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modification de l'URL pour utiliser simplement http://localhost/api/crud.php sans spécifier le port 80
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/api/crud.php';
-  
-  console.log("URL de l'API utilisée:", API_URL); // Log pour vérifier l'URL utilisée
 
   const loadEntries = async () => {
     setIsLoading(true);
-    console.log("Tentative de chargement des données depuis:", API_URL);
     try {
-      // Use AbortController for timeout instead of the non-standard timeout option
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
-      
-      console.log("Envoi de la requête fetch...");
       const response = await fetch(API_URL, { 
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        signal: controller.signal
+          'Content-Type': 'application/json'
+        }
       });
       
-      clearTimeout(timeoutId); // Clear the timeout if fetch completes before timeout
-      
-      console.log("Réponse reçue:", response.status, response.statusText);
-      
       if (!response.ok) {
-        throw new Error(`Erreur lors du chargement des données: ${response.status} ${response.statusText}`);
+        throw new Error('Erreur lors du chargement des données');
       }
       
       const data = await response.json();
-      console.log("Données reçues:", data);
       setEntries(data);
       setIsOffline(false);
     } catch (error) {
-      console.error('Erreur de chargement détaillée:', error);
+      console.error('Erreur de chargement:', error);
       setIsOffline(true);
       toast({
         title: "Erreur de connexion",
@@ -89,11 +72,9 @@ export default function Interface() {
 
   const handleSubmit = async (values: FormSchema) => {
     try {
-      // Formatage des dates pour l'API
       const dateFinContrat = values.dateFinContrat ? format(values.dateFinContrat, 'yyyy-MM-dd') : null;
       const dateReglement = values.dateReglement ? format(values.dateReglement, 'yyyy-MM-dd') : null;
       
-      // Initialisation des champs numériques à 0 s'ils sont undefined
       const preparedData = {
         ...values,
         dateFinContrat,
@@ -104,9 +85,8 @@ export default function Interface() {
         delaisPrevis: values.delaisPrevis ?? 0,
       };
 
-      console.log('Données préparées:', preparedData); // Debug log
+      console.log('Données préparées:', preparedData);
 
-      // En mode hors ligne, on simule un succès
       if (isOffline) {
         toast({
           title: "Mode hors ligne",
@@ -132,7 +112,7 @@ export default function Interface() {
       }
 
       const result = await response.json();
-      console.log('Réponse du serveur:', result); // Debug log
+      console.log('Réponse du serveur:', result);
 
       toast({
         title: "Succès",
@@ -161,7 +141,6 @@ export default function Interface() {
 
   const handleDelete = async (id: number) => {
     try {
-      // En mode hors ligne, on simule un succès
       if (isOffline) {
         toast({
           title: "Mode hors ligne",
@@ -203,8 +182,6 @@ export default function Interface() {
           <AlertDescription>
             Impossible de se connecter à l'API. L'application fonctionne en mode hors ligne.
             Vérifiez que votre serveur API est en cours d'exécution à l'adresse {API_URL}.
-            <br />
-            <strong>Assurez-vous que PHP est en cours d'exécution et que le serveur est accessible.</strong>
           </AlertDescription>
         </Alert>
       )}
