@@ -1,3 +1,4 @@
+
 <?php
 require_once 'config.php';
 
@@ -79,16 +80,29 @@ function handleNullableValue($value) {
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
         error_log("Exécution de la requête GET pour récupérer toutes les entrées");
-        $stmt = $pdo->query('SELECT * FROM budget_entries ORDER BY id DESC');
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Nombre d'entrées récupérées: " . count($results));
         
-        // Logguer un échantillon des données pour vérification
-        if (count($results) > 0) {
-            error_log("Premier enregistrement: " . json_encode($results[0]));
+        // Vérifier à nouveau la connexion
+        $pdo->query("SELECT 1");
+        error_log("Connexion toujours active");
+        
+        // Nouvelle tentative avec try/catch supplémentaire pour isoler l'erreur potentielle
+        try {
+            $stmt = $pdo->query('SELECT * FROM budget_entries ORDER BY id DESC');
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Nombre d'entrées récupérées: " . count($results));
+            
+            // Logguer un échantillon des données pour vérification
+            if (count($results) > 0) {
+                error_log("Premier enregistrement: " . json_encode($results[0]));
+            } else {
+                error_log("ATTENTION: Aucune entrée trouvée dans la table budget_entries");
+            }
+            
+            echo json_encode($results);
+        } catch (PDOException $e) {
+            error_log("ERREUR spécifique à la requête SELECT: " . $e->getMessage());
+            throw $e;
         }
-        
-        echo json_encode($results);
     } catch (PDOException $e) {
         error_log("ERREUR GET: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());

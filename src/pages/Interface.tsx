@@ -30,6 +30,7 @@ export default function Interface() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
       
+      console.log("Envoi de la requête fetch...");
       const response = await fetch(API_URL, { 
         method: 'GET',
         headers: {
@@ -41,8 +42,10 @@ export default function Interface() {
       
       clearTimeout(timeoutId); // Clear the timeout if fetch completes before timeout
       
+      console.log("Réponse reçue:", response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement des données');
+        throw new Error(`Erreur lors du chargement des données: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
