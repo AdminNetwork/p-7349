@@ -7,6 +7,9 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
+// Log des requêtes entrantes
+error_log("Requête reçue: " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI']);
+
 // Tableau de correspondance des mois
 $monthsData = [
     ['value' => 1, 'label' => "Janvier"],
@@ -55,10 +58,14 @@ function handleNullableValue($value) {
 // Récupérer toutes les entrées
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
+        error_log("Exécution de la requête GET pour récupérer toutes les entrées");
         $stmt = $pdo->query('SELECT * FROM budget_entries ORDER BY id DESC');
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log("Nombre d'entrées récupérées: " . count($results));
         echo json_encode($results);
     } catch (PDOException $e) {
+        error_log("ERREUR GET: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         http_response_code(500);
         echo json_encode(['error' => $e->getMessage()]);
     }

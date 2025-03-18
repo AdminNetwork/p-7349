@@ -17,10 +17,14 @@ export default function Interface() {
   const [isOffline, setIsOffline] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/api/crud.php';
+  // Modification de l'URL pour utiliser http://localhost:80/api/crud.php au lieu de http://localhost/api/crud.php
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:80/api/crud.php';
+  
+  console.log("URL de l'API utilisée:", API_URL); // Log pour vérifier l'URL utilisée
 
   const loadEntries = async () => {
     setIsLoading(true);
+    console.log("Tentative de chargement des données depuis:", API_URL);
     try {
       // Use AbortController for timeout instead of the non-standard timeout option
       const controller = new AbortController();
@@ -42,10 +46,11 @@ export default function Interface() {
       }
       
       const data = await response.json();
+      console.log("Données reçues:", data);
       setEntries(data);
       setIsOffline(false);
     } catch (error) {
-      console.error('Erreur de chargement:', error);
+      console.error('Erreur de chargement détaillée:', error);
       setIsOffline(true);
       toast({
         title: "Erreur de connexion",
@@ -195,6 +200,8 @@ export default function Interface() {
           <AlertDescription>
             Impossible de se connecter à l'API. L'application fonctionne en mode hors ligne.
             Vérifiez que votre serveur API est en cours d'exécution à l'adresse {API_URL}.
+            <br />
+            <strong>Assurez-vous que PHP est en cours d'exécution et que le serveur est accessible.</strong>
           </AlertDescription>
         </Alert>
       )}
