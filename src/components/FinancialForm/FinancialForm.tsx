@@ -7,7 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Plus, Save } from "lucide-react";
 import { CalculatedFields } from "./CalculatedFields";
-import { monthsData, yearRange, periodeOptions, formSchema, requiredFieldErrorColor } from "./formConfig";
+import { 
+  monthsData, 
+  yearRange, 
+  periodeOptions, 
+  formSchema, 
+  requiredFieldErrorColor,
+  societeFactureeOptions,
+  axeIT1Options,
+  axeIT2Options
+} from "./formConfig";
 import type { FinancialFormData } from "@/types/budget";
 import { useEffect, useState } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -338,16 +347,33 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Axe IT 1*</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Entrez l'axe IT 1" 
-                    {...field} 
-                    style={{ 
-                      borderColor: formState.errors.axeIT1 ? requiredFieldErrorColor : undefined,
-                      borderWidth: formState.errors.axeIT1 ? "2px" : undefined
-                    }}
-                  />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.axeIT1 ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.axeIT1 ? "2px" : undefined
+                      }}
+                    >
+                      <SelectValue placeholder="Sélectionnez un axe IT 1" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {axeIT1Options.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -358,16 +384,33 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Axe IT 2*</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Entrez l'axe IT 2" 
-                    {...field} 
-                    style={{ 
-                      borderColor: formState.errors.axeIT2 ? requiredFieldErrorColor : undefined,
-                      borderWidth: formState.errors.axeIT2 ? "2px" : undefined
-                    }}
-                  />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.axeIT2 ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.axeIT2 ? "2px" : undefined
+                      }}
+                    >
+                      <SelectValue placeholder="Sélectionnez un axe IT 2" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {axeIT2Options.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -378,16 +421,33 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Société facturée*</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Entrez la société facturée" 
-                    {...field} 
-                    style={{ 
-                      borderColor: formState.errors.societeFacturee ? requiredFieldErrorColor : undefined,
-                      borderWidth: formState.errors.societeFacturee ? "2px" : undefined
-                    }}
-                  />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger 
+                      className="bg-white"
+                      style={{ 
+                        borderColor: formState.errors.societeFacturee ? requiredFieldErrorColor : undefined,
+                        borderWidth: formState.errors.societeFacturee ? "2px" : undefined
+                      }}
+                    >
+                      <SelectValue placeholder="Sélectionnez une société" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    {societeFactureeOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-muted text-gray-900 hover:text-gray-900"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -564,3 +624,4 @@ export function FinancialForm({ onSubmit, editingId, entries = [] }: FinancialFo
     </Form>
   );
 }
+

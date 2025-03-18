@@ -36,6 +36,48 @@ export const periodeOptions = [
   { value: "semestriel", label: "Semestriel" },
 ];
 
+// Liste des sociétés facturées
+export const societeFactureeOptions = [
+  { value: "climalife", label: "Climalife" },
+  { value: "gestimat", label: "Gestimat" },
+  { value: "crealis", label: "Crealis" },
+  { value: "dehon_service", label: "Dehon Service" },
+  { value: "gestimat_belgium", label: "Gestimat Belgium" },
+  { value: "matelex", label: "Matelex" },
+  { value: "smb", label: "SMB" },
+];
+
+// Liste des options pour Axe IT 1
+export const axeIT1Options = [
+  { value: "business", label: "Business" },
+  { value: "it_devops", label: "IT-DevOps" },
+  { value: "it_middleware", label: "IT-Middleware" },
+  { value: "it_jde", label: "IT-JDE" },
+  { value: "it_digital_workplace", label: "IT-Digital WorkPlace" },
+  { value: "it_network", label: "IT-Network" },
+  { value: "juridique", label: "Juridique" },
+  { value: "security", label: "Security" },
+  { value: "it_user_assistance", label: "IT-User Assistance" },
+];
+
+// Liste des options pour Axe IT 2
+export const axeIT2Options = [
+  { value: "hosting", label: "Hosting" },
+  { value: "web_development", label: "Web Development" },
+  { value: "digital_workplace", label: "Digital WorkPlace" },
+  { value: "middleware", label: "Middleware" },
+  { value: "websites", label: "Websites" },
+  { value: "tools", label: "Tools" },
+  { value: "bi_dev", label: "BI Dev" },
+  { value: "back_office_dev", label: "Back Office Dev" },
+  { value: "business", label: "Business" },
+  { value: "jde_prestation", label: "JDE Prestation" },
+  { value: "run_management", label: "Run Management" },
+  { value: "mobile_telephony", label: "Mobile Telephony" },
+  { value: "ip_telephony", label: "IP Telephony" },
+  { value: "jde_software", label: "JDE Software" },
+];
+
 // Définition de la couleur pour les champs obligatoires en erreur
 export const requiredFieldErrorColor = "#ea384c";
 
