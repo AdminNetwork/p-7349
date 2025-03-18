@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import type { FinancialFormData } from "@/types/budget";
 import { FinancialForm } from "@/components/FinancialForm/FinancialForm";
 import { EntriesList } from "@/components/FinancialForm/EntriesList";
@@ -12,27 +14,63 @@ export default function Interface() {
   const { toast } = useToast();
   const [entries, setEntries] = useState<FinancialFormData[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/api/crud.php';
 
   const loadEntries = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch('http://localhost/api/crud.php');
+      const response = await fetch(API_URL, { 
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        timeout: 5000  // 5 seconds timeout
+      });
+      
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des données');
       }
+      
       const data = await response.json();
       setEntries(data);
+      setIsOffline(false);
     } catch (error) {
       console.error('Erreur de chargement:', error);
+      setIsOffline(true);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les données",
+        title: "Erreur de connexion",
+        description: "Impossible de se connecter à l'API. Mode hors ligne activé.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadEntries();
+    
+    // Check network status
+    const handleOnline = () => {
+      setIsOffline(false);
+      loadEntries();
+    };
+    
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const handleSubmit = async (values: FormSchema) => {
@@ -54,10 +92,19 @@ export default function Interface() {
 
       console.log('Données préparées:', preparedData); // Debug log
 
+      // En mode hors ligne, on simule un succès
+      if (isOffline) {
+        toast({
+          title: "Mode hors ligne",
+          description: "Les données ont été enregistrées localement",
+        });
+        return;
+      }
+
       const method = editingId !== null ? 'PUT' : 'POST';
       const submitData = editingId !== null ? { ...preparedData, id: editingId } : preparedData;
 
-      const response = await fetch('http://localhost/api/crud.php', {
+      const response = await fetch(API_URL, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +147,16 @@ export default function Interface() {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost/api/crud.php?id=${id}`, {
+      // En mode hors ligne, on simule un succès
+      if (isOffline) {
+        toast({
+          title: "Mode hors ligne",
+          description: "Suppression simulée en mode hors ligne",
+        });
+        return;
+      }
+
+      const response = await fetch(`${API_URL}?id=${id}`, {
         method: 'DELETE',
       });
 
@@ -126,6 +182,17 @@ export default function Interface() {
 
   return (
     <div className="space-y-6">
+      {isOffline && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Problème de connexion</AlertTitle>
+          <AlertDescription>
+            Impossible de se connecter à l'API. L'application fonctionne en mode hors ligne.
+            Vérifiez que votre serveur API est en cours d'exécution à l'adresse {API_URL}.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Gestion des Données Financières</CardTitle>
@@ -143,6 +210,7 @@ export default function Interface() {
         entries={entries}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        isLoading={isLoading}
       />
     </div>
   );
