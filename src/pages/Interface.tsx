@@ -17,8 +17,8 @@ export default function Interface() {
   const [isOffline, setIsOffline] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modification de l'URL pour utiliser http://localhost:80/api/crud.php au lieu de http://localhost/api/crud.php
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:80/api/crud.php';
+  // Modification de l'URL pour utiliser simplement http://localhost/api/crud.php sans spécifier le port 80
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/api/crud.php';
   
   console.log("URL de l'API utilisée:", API_URL); // Log pour vérifier l'URL utilisée
 

@@ -1,4 +1,3 @@
-
 <?php
 require_once 'config.php';
 
@@ -7,8 +6,29 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-// Log des requêtes entrantes
+// Log des requêtes entrantes avec plus de détails
 error_log("Requête reçue: " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI']);
+error_log("Headers: " . json_encode(getallheaders()));
+
+// Test de la connexion à la base de données
+try {
+    $test = $pdo->query("SELECT 1");
+    error_log("Test de connexion à la base de données réussi");
+    
+    // Vérifier si la table budget_entries existe
+    $tables = $pdo->query("SHOW TABLES LIKE 'budget_entries'")->fetchAll();
+    if (count($tables) > 0) {
+        error_log("Table budget_entries trouvée");
+        
+        // Vérifier le nombre d'entrées dans la table
+        $count = $pdo->query("SELECT COUNT(*) as total FROM budget_entries")->fetch();
+        error_log("Nombre total d'entrées dans la table: " . $count['total']);
+    } else {
+        error_log("ERREUR: Table budget_entries non trouvée!");
+    }
+} catch (PDOException $e) {
+    error_log("ERREUR test connexion: " . $e->getMessage());
+}
 
 // Tableau de correspondance des mois
 $monthsData = [
@@ -62,6 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt = $pdo->query('SELECT * FROM budget_entries ORDER BY id DESC');
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         error_log("Nombre d'entrées récupérées: " . count($results));
+        
+        // Logguer un échantillon des données pour vérification
+        if (count($results) > 0) {
+            error_log("Premier enregistrement: " . json_encode($results[0]));
+        }
+        
         echo json_encode($results);
     } catch (PDOException $e) {
         error_log("ERREUR GET: " . $e->getMessage());
